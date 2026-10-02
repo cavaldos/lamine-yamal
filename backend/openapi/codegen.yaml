@@ -1,0 +1,13 @@
+# oapi-codegen configuration for the LAMINE backend.
+#
+# Scope decision (lead): generate the DTO types + the embedded spec only.
+# There is deliberately NO chi server and NO strict-server stub: the handlers
+# work directly on internal/model structs, and the embedded spec is served
+# verbatim from GET /openapi.json.
+package: api
+output: internal/api/api.gen.go
+generate:
+  models: true
+  embedded-spec: true
+output-options:
+  skip-prune: true

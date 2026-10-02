@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1033"/><stop offset="1" stop-color="#4a0f18"/>
+    </linearGradient>
+    <linearGradient id="jersey" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e11d2e"/><stop offset="1" stop-color="#8f0f1c"/>
+    </linearGradient>
+    <clipPath id="frame"><rect x="40" y="40" width="820" height="1120" rx="28"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="900" height="1200" fill="url(#bg)"/>
+
+    <!-- crowd bokeh -->
+    <g fill="#ffffff" opacity=".14">
+      <circle cx="120" cy="180" r="9"/><circle cx="300" cy="120" r="6"/><circle cx="520" cy="200" r="11"/>
+      <circle cx="700" cy="140" r="7"/><circle cx="820" cy="260" r="9"/><circle cx="180" cy="300" r="6"/>
+      <circle cx="60" cy="420" r="8"/><circle cx="840" cy="440" r="6"/><circle cx="240" cy="90" r="5"/>
+    </g>
+
+    <!-- floodlight glow -->
+    <circle cx="450" cy="470" r="330" fill="#ffd166" opacity=".10"/>
+
+    <!-- shoulders / jersey -->
+    <path d="M450 662c-130 0-215 58-245 152l-30 386h550l-30-386c-30-94-115-152-245-152z" fill="url(#jersey)"/>
+
+    <!-- neck -->
+    <path d="M394 570h112v92c0 30-25 52-56 52s-56-22-56-52z" fill="#a9704b"/>
+
+    <!-- head -->
+    <ellipse cx="450" cy="440" rx="152" ry="178" fill="#c08a5e"/>
+
+    <!-- ears -->
+    <ellipse cx="298" cy="452" rx="20" ry="30" fill="#a9704b"/>
+    <ellipse cx="602" cy="452" rx="20" ry="30" fill="#a9704b"/>
+
+    <!-- hair: short curls, high fade -->
+    <g fill="#160d0b">
+      <path d="M298 404c-14-92 60-166 152-166s166 74 152 166c-8-52-26-76-46-88-16 30-56 44-92 38-34-6-58-26-70-54-40 18-72 54-96 104z"/>
+      <circle cx="360" cy="300" r="42"/><circle cx="430" cy="272" r="46"/><circle cx="508" cy="278" r="44"/>
+      <circle cx="572" cy="308" r="38"/><circle cx="612" cy="356" r="30"/>
+    </g>
+
+    <!-- brows -->
+    <path d="M356 404c22-14 52-14 74 0" stroke="#160d0b" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <path d="M470 404c22-14 52-14 74 0" stroke="#160d0b" stroke-width="12" stroke-linecap="round" fill="none"/>
+
+    <!-- eyes -->
+    <g fill="#1b1005"><ellipse cx="396" cy="448" rx="19" ry="14"/><ellipse cx="504" cy="448" rx="19" ry="14"/></g>
+    <g fill="#fff"><circle cx="402" cy="443" r="5"/><circle cx="510" cy="443" r="5"/></g>
+
+    <!-- nose + mouth -->
+    <path d="M450 470v44c0 10-8 16-18 16" stroke="#8a5a34" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <path d="M414 566c24 18 48 18 72 0" stroke="#6d3a26" stroke-width="10" stroke-linecap="round" fill="none"/>
+
+    <!-- collar / yellow band -->
+    <path d="M362 686c50 34 126 34 176 0l15 36c-60 40-146 40-206 0z" fill="#ffc72c"/>
+
+    <!-- number 19 -->
+    <text x="450" y="1010" font-family="Helvetica,Arial,sans-serif" font-size="230" font-weight="700"
+          fill="#ffc72c" opacity=".92" text-anchor="middle">19</text>
+
+    <!-- name plate -->
+    <rect x="150" y="1058" width="600" height="70" rx="14" fill="#0d0616" opacity=".55"/>
+    <text x="450" y="1108" font-family="Helvetica,Arial,sans-serif" font-size="46" font-weight="700"
+          letter-spacing="6" fill="#fff" text-anchor="middle">LAMINE YAMAL</text>
+    <text x="450" y="95" font-family="Helvetica,Arial,sans-serif" font-size="26" letter-spacing="10"
+          fill="#ffc72c" opacity=".8" text-anchor="middle">ESPANYOL</text>
+  </g>
+  <rect x="40" y="40" width="820" height="1120" rx="28" fill="none" stroke="#ffc72c" stroke-width="4" opacity=".7"/>
+</svg>

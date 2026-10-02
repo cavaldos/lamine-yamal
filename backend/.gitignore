@@ -1,0 +1,19 @@
+# Local config and secrets
+.env
+.env.local
+
+# Build output
+bin/
+dist/
+
+# Test and coverage artifacts
+*.out
+coverage.*
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+
+# NOTE: data/ is deliberately NOT ignored. data/lamine.json is the entire
+# datastore and MUST be committed to git. Do not add a rule matching it.

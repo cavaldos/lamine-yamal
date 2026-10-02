@@ -1,0 +1,2202 @@
+# LAMINE backend — authoritative REST contract.
+#
+# Hand-written on purpose: this file is the source of truth for the DTOs in
+# internal/model/ and for the Go types generated into internal/api/ by
+# oapi-codegen. Field names and json tags mirror plan.md §8.4 (DDL) exactly.
+#
+# Regenerate Go types with:  make gen  (see openapi/README.md)
+openapi: 3.1.0
+info:
+  title: LAMINE API
+  version: 1.0.0
+  summary: Goals, matches, stats and heatmaps of Lamine Yamal.
+  description: |
+    JSON in / JSON out. All mutating operations (POST/PUT/PATCH/DELETE) require
+    the `X-Admin-Token` header. Errors are RFC 9457 `application/problem+json`.
+    Coordinates (`location_x`, `location_y`) are always pitch metres on a
+    105x68 m pitch, origin top-left, attacking left-to-right.
+  license:
+    name: MIT
+  contact:
+    name: LAMINE
+servers:
+  - url: http://localhost:8080
+    description: Local dev
+
+tags:
+  - name: health
+  - name: meta
+  - name: players
+  - name: teams
+  - name: competitions
+  - name: opponents
+  - name: matches
+  - name: goals
+  - name: stats
+  - name: viz
+
+# ---------------------------------------------------------------------------
+# Security scheme
+# ---------------------------------------------------------------------------
+security: []
+
+# ---------------------------------------------------------------------------
+# PATHS
+# ---------------------------------------------------------------------------
+paths:
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe + database ping
+      tags: [health]
+      security: []
+      responses:
+        "200":
+          description: Service is up and the database answers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /openapi.json:
+    get:
+      operationId: openapiJson
+      summary: This document, served verbatim
+      tags: [meta]
+      security: []
+      responses:
+        "200":
+          description: The embedded OpenAPI 3.1 document.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Players
+  # -------------------------------------------------------------------------
+  /api/v1/players:
+    get:
+      operationId: listPlayers
+      summary: List players
+      tags: [players]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: All players.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Player"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: createPlayer
+      summary: Create a player
+      tags: [players]
+      parameters:
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePlayer"
+      responses:
+        "201":
+          description: Player created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/players/{id}:
+    get:
+      operationId: getPlayer
+      summary: Get one player
+      tags: [players]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: The player.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    put:
+      operationId: updatePlayer
+      summary: Update a player (partial — omitted fields are left untouched)
+      tags: [players]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePlayer"
+      responses:
+        "200":
+          description: The updated player.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Player"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deletePlayer
+      summary: Delete a player
+      tags: [players]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Teams
+  # -------------------------------------------------------------------------
+  /api/v1/teams:
+    get:
+      operationId: listTeams
+      summary: List teams
+      tags: [teams]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: All teams.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Team"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: createTeam
+      summary: Create a team
+      tags: [teams]
+      parameters:
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeam"
+      responses:
+        "201":
+          description: Team created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/teams/{id}:
+    get:
+      operationId: getTeam
+      summary: Get one team
+      tags: [teams]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: The team.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    put:
+      operationId: updateTeam
+      summary: Update a team (partial — omitted fields are left untouched)
+      tags: [teams]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeam"
+      responses:
+        "200":
+          description: The updated team.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteTeam
+      summary: Delete a team
+      tags: [teams]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Competitions
+  # -------------------------------------------------------------------------
+  /api/v1/competitions:
+    get:
+      operationId: listCompetitions
+      summary: List competitions
+      tags: [competitions]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: All competitions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Competition"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: createCompetition
+      summary: Create a competition
+      tags: [competitions]
+      parameters:
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCompetition"
+      responses:
+        "201":
+          description: Competition created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competition"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/competitions/{id}:
+    get:
+      operationId: getCompetition
+      summary: Get one competition
+      tags: [competitions]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: The competition.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competition"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    put:
+      operationId: updateCompetition
+      summary: Update a competition (partial — omitted fields are left untouched)
+      tags: [competitions]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCompetition"
+      responses:
+        "200":
+          description: The updated competition.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competition"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteCompetition
+      summary: Delete a competition
+      tags: [competitions]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Opponents
+  # -------------------------------------------------------------------------
+  /api/v1/opponents:
+    get:
+      operationId: listOpponents
+      summary: List opponents
+      tags: [opponents]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: All opponents.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Opponent"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: createOpponent
+      summary: Create an opponent
+      tags: [opponents]
+      parameters:
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOpponent"
+      responses:
+        "201":
+          description: Opponent created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opponent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/opponents/{id}:
+    get:
+      operationId: getOpponent
+      summary: Get one opponent
+      tags: [opponents]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: The opponent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opponent"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    put:
+      operationId: updateOpponent
+      summary: Update an opponent (partial — omitted fields are left untouched)
+      tags: [opponents]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOpponent"
+      responses:
+        "200":
+          description: The updated opponent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opponent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteOpponent
+      summary: Delete an opponent
+      tags: [opponents]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Matches
+  # -------------------------------------------------------------------------
+  /api/v1/matches:
+    get:
+      operationId: listMatches
+      summary: List matches (filtered)
+      tags: [matches]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/competitionId"
+        - $ref: "#/components/parameters/opponentId"
+        - $ref: "#/components/parameters/season"
+        - $ref: "#/components/parameters/dateFrom"
+        - $ref: "#/components/parameters/dateTo"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/matchSort"
+      responses:
+        "200":
+          description: A page of matches plus the unpaginated total.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchList"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: createMatch
+      summary: Create a match
+      tags: [matches]
+      parameters:
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMatch"
+      responses:
+        "201":
+          description: Match created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/matches/{id}:
+    get:
+      operationId: getMatch
+      summary: Get one match, optionally with its goals, stats and heatmap
+      tags: [matches]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/expand"
+      responses:
+        "200":
+          description: The match; `goals`, `stats` and `heatmap` are only
+            populated when requested through `expand`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      operationId: updateMatch
+      summary: Partially update a match
+      tags: [matches]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMatch"
+      responses:
+        "200":
+          description: The updated match.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteMatch
+      summary: Delete a match (cascades to goals, stats, shots)
+      tags: [matches]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Match stats
+  # -------------------------------------------------------------------------
+  /api/v1/matches/{id}/stats:
+    get:
+      operationId: getMatchStats
+      summary: Per-match stats (plus heatmap when present)
+      tags: [stats]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: The match stat row. `heatmap` is null when we hold no
+            tracking data — the UI must render an empty state, not zeros.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchStat"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    put:
+      operationId: upsertMatchStats
+      summary: Create or replace the stat row of a match (idempotent)
+      tags: [stats]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMatchStat"
+      responses:
+        "200":
+          description: The stored stat row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchStat"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/matches/{id}/stats/heatmap:
+    put:
+      operationId: upsertMatchHeatmap
+      summary: Upsert the heatmap of a match (idempotent)
+      tags: [stats]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertHeatmap"
+      responses:
+        "200":
+          description: The stat row with the new heatmap attached.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchStat"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Goals — the main read path
+  # -------------------------------------------------------------------------
+  /api/v1/goals:
+    get:
+      operationId: listGoals
+      summary: List goals, filtered and sorted
+      tags: [goals]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/competitionId"
+        - $ref: "#/components/parameters/season"
+        - $ref: "#/components/parameters/opponentId"
+        - $ref: "#/components/parameters/dateFrom"
+        - $ref: "#/components/parameters/dateTo"
+        - $ref: "#/components/parameters/matchId"
+        - $ref: "#/components/parameters/goalType"
+        - $ref: "#/components/parameters/bodyPart"
+        - $ref: "#/components/parameters/isHome"
+        - $ref: "#/components/parameters/goalSort"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: A page of goals plus the unpaginated total.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoalList"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: createGoal
+      summary: Create a goal
+      tags: [goals]
+      parameters:
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGoal"
+      responses:
+        "201":
+          description: Goal created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/goals/{id}:
+    get:
+      operationId: getGoal
+      summary: Get one goal with its surrounding context
+      tags: [goals]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: The goal plus match, competition, opponent and the
+            previous/next goal by time.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoalDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      operationId: updateGoal
+      summary: Partially update a goal
+      tags: [goals]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGoal"
+      responses:
+        "200":
+          description: The updated goal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteGoal
+      summary: Delete a goal
+      tags: [goals]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/AdminToken"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # -------------------------------------------------------------------------
+  # Visualisations
+  # -------------------------------------------------------------------------
+  /api/v1/heatmap:
+    get:
+      operationId: getHeatmap
+      summary: Aggregated heatmap across all matches matching the goal filters
+      tags: [viz]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/competitionId"
+        - $ref: "#/components/parameters/season"
+        - $ref: "#/components/parameters/opponentId"
+        - $ref: "#/components/parameters/dateFrom"
+        - $ref: "#/components/parameters/dateTo"
+        - $ref: "#/components/parameters/matchId"
+        - $ref: "#/components/parameters/goalType"
+        - $ref: "#/components/parameters/bodyPart"
+        - $ref: "#/components/parameters/isHome"
+      responses:
+        "200":
+          description: The merged grid plus rollup counters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeatmapAggregate"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/summary:
+    get:
+      operationId: getSummary
+      summary: Dashboard rollup across all goals matching the filters
+      tags: [viz]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/competitionId"
+        - $ref: "#/components/parameters/season"
+        - $ref: "#/components/parameters/opponentId"
+        - $ref: "#/components/parameters/dateFrom"
+        - $ref: "#/components/parameters/dateTo"
+        - $ref: "#/components/parameters/matchId"
+        - $ref: "#/components/parameters/goalType"
+        - $ref: "#/components/parameters/bodyPart"
+        - $ref: "#/components/parameters/isHome"
+      responses:
+        "200":
+          description: Aggregated counters for the dashboard.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Summary"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+# ---------------------------------------------------------------------------
+# COMPONENTS
+# ---------------------------------------------------------------------------
+components:
+  # -------------------------------------------------------------------------
+  # Reusable parameters
+  # -------------------------------------------------------------------------
+  parameters:
+    AdminToken:
+      name: X-Admin-Token
+      in: header
+      required: true
+      description: |
+        Shared admin secret (env `ADMIN_TOKEN`). Required on every mutating
+        operation. Returned as 401 `application/problem+json` when missing or
+        wrong.
+      schema:
+        type: string
+        minLength: 1
+
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Row id.
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    competitionId:
+      name: competition_id
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    opponentId:
+      name: opponent_id
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    matchId:
+      name: match_id
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    season:
+      name: season
+      in: query
+      required: false
+      description: Free-form season label as stored on `matches.season`, e.g. "2024/25".
+      schema:
+        type: string
+
+    dateFrom:
+      name: date_from
+      in: query
+      required: false
+      description: Inclusive lower bound on `matches.played_at`, as `YYYY-MM-DD`.
+      schema:
+        type: string
+
+    dateTo:
+      name: date_to
+      in: query
+      required: false
+      description: Inclusive upper bound on `matches.played_at`, as `YYYY-MM-DD`.
+      schema:
+        type: string
+
+    goalType:
+      name: goal_type
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/GoalType"
+
+    bodyPart:
+      name: body_part
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/BodyPart"
+
+    isHome:
+      name: is_home
+      in: query
+      required: false
+      description: Restrict to home (true) or away (false) matches.
+      schema:
+        type: boolean
+
+    goalSort:
+      name: sort
+      in: query
+      required: false
+      description: |
+        Sort order. `xg_asc` = least likely goal first (most surprising),
+        `xg_desc` = most likely first, `value_desc` = highest career value first.
+      schema:
+        $ref: "#/components/schemas/GoalSort"
+
+    matchSort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/MatchSort"
+
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 200
+        default: 24
+
+    offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+
+    expand:
+      name: expand
+      in: query
+      required: false
+      description: Comma-separated list of relations to inline, e.g. `goals,stats`.
+      schema:
+        type: string
+        examples:
+          - goals,stats
+
+  # -------------------------------------------------------------------------
+  # Reusable responses (all RFC 9457)
+  # -------------------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: Malformed request or failed validation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Unauthorized:
+      description: Missing or invalid `X-Admin-Token`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: Row does not exist, or a referenced id does not exist.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Conflict:
+      description: Unique-constraint violation (duplicate code or source id).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InternalError:
+      description: Unexpected failure. Logged server-side; details are not leaked.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
+  # -------------------------------------------------------------------------
+  # Schemas — mirror internal/model/*.go json tags 1:1
+  # -------------------------------------------------------------------------
+  schemas:
+    Problem:
+      type: object
+      description: RFC 9457 problem detail.
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: about:blank
+          description: URI reference identifying the problem type.
+        title:
+          type: string
+          description: Short, human-readable summary of the problem type.
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code.
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence.
+        instance:
+          type: string
+          format: uri-reference
+          description: URI reference identifying this occurrence.
+
+    Health:
+      type: object
+      required: [status, db]
+      properties:
+        status:
+          type: string
+          examples: ["ok"]
+        db:
+          type: string
+          description: "Result of the pgx ping, e.g. `ok` or `error: ...`."
+          examples: ["ok"]
+
+    # -- shared value objects -------------------------------------------------
+    GoalType:
+      type: string
+      description: Goal category (DB CHECK constraint).
+      enum: [open_play, penalty, free_kick, header, counter, own_goal]
+
+    BodyPart:
+      type: string
+      description: Which part of the body scored (DB CHECK constraint).
+      enum: [left_foot, right_foot, head, other]
+
+    ShotOutcome:
+      type: string
+      description: Raw Understat shot result.
+      enum: [Goal, MissedShots, BlockedShot, SavedShot, ShotOnPost]
+
+    GoalSort:
+      type: string
+      enum: [date_asc, date_desc, xg_asc, xg_desc, value_desc, minute_asc]
+
+    MatchSort:
+      type: string
+      description: |
+        Sort order for matches. Shares the same whitelist as the goal list
+        (`model.ParseMatchFilter`); only the two date modes are meaningful here.
+      enum: [date_asc, date_desc, xg_asc, xg_desc, value_desc]
+
+    # -- players --------------------------------------------------------------
+    Player:
+      type: object
+      description: Mirrors the `players` table.
+      required: [id, full_name, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        full_name:
+          type: string
+        team_id:
+          type: integer
+          nullable: true
+          format: int64
+        shirt_number:
+          type: integer
+          nullable: true
+        position:
+          type: string
+          nullable: true
+        birth_date:
+          type: string
+          nullable: true
+          format: date
+        nationality:
+          type: string
+          nullable: true
+        source_player_id:
+          type: string
+          nullable: true
+          description: Understat player id.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreatePlayer:
+      type: object
+      required: [full_name]
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+        team_id:
+          type: integer
+          format: int64
+        shirt_number:
+          type: integer
+        position:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        nationality:
+          type: string
+        source_player_id:
+          type: string
+
+    UpdatePlayer:
+      type: object
+      description: All fields optional; omitted fields are left untouched.
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+        team_id:
+          type: integer
+          format: int64
+        shirt_number:
+          type: integer
+        position:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        nationality:
+          type: string
+        source_player_id:
+          type: string
+
+    # -- teams ----------------------------------------------------------------
+    Team:
+      type: object
+      description: Mirrors the `teams` table.
+      required: [id, name, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        short_name:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateTeam:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        short_name:
+          type: string
+        country:
+          type: string
+        logo_url:
+          type: string
+
+    UpdateTeam:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        short_name:
+          type: string
+        country:
+          type: string
+        logo_url:
+          type: string
+
+    # -- competitions ---------------------------------------------------------
+    Competition:
+      type: object
+      description: Mirrors the `competitions` table.
+      required: [id, name, code, priority, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        code:
+          type: string
+        country:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        priority:
+          type: integer
+          format: int32
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateCompetition:
+      type: object
+      required: [name, code]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        code:
+          type: string
+          minLength: 1
+          description: Unique short code, e.g. "LL".
+        country:
+          type: string
+        logo_url:
+          type: string
+        priority:
+          type: integer
+          format: int32
+          default: 0
+
+    UpdateCompetition:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        code:
+          type: string
+          minLength: 1
+        country:
+          type: string
+        logo_url:
+          type: string
+        priority:
+          type: integer
+          format: int32
+
+    # -- opponents ------------------------------------------------------------
+    Opponent:
+      type: object
+      description: Mirrors the `opponents` table.
+      required: [id, name, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        team_id:
+          type: integer
+          nullable: true
+          format: int64
+        logo_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateOpponent:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        team_id:
+          type: integer
+          format: int64
+        logo_url:
+          type: string
+
+    UpdateOpponent:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        team_id:
+          type: integer
+          format: int64
+        logo_url:
+          type: string
+
+    # -- matches --------------------------------------------------------------
+    Match:
+      type: object
+      description: |
+        Mirrors the `matches` table. `score_for` / `score_against` are always
+        from the tracked player's point of view; `is_home` tells the frontend
+        whether to mirror the pitch.
+      required:
+        [id, competition_id, opponent_id, is_home, played_at, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        competition_id:
+          type: integer
+          format: int64
+        opponent_id:
+          type: integer
+          format: int64
+        season:
+          type: string
+          nullable: true
+        played_at:
+          type: string
+          format: date-time
+        is_home:
+          type: boolean
+        score_for:
+          type: integer
+          nullable: true
+          format: int32
+        score_against:
+          type: integer
+          nullable: true
+          format: int32
+        venue:
+          type: string
+          nullable: true
+        referee:
+          type: string
+          nullable: true
+        attendance:
+          type: integer
+          nullable: true
+          format: int32
+        source_match_id:
+          type: string
+          nullable: true
+        video_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateMatch:
+      type: object
+      required: [competition_id, opponent_id, played_at]
+      properties:
+        competition_id:
+          type: integer
+          format: int64
+        opponent_id:
+          type: integer
+          format: int64
+        season:
+          type: string
+        played_at:
+          type: string
+          format: date-time
+        is_home:
+          type: boolean
+          default: false
+        score_for:
+          type: integer
+          format: int32
+        score_against:
+          type: integer
+          format: int32
+        venue:
+          type: string
+        referee:
+          type: string
+        attendance:
+          type: integer
+          format: int32
+        source_match_id:
+          type: string
+        video_url:
+          type: string
+
+    UpdateMatch:
+      type: object
+      description: All fields optional; omitted fields are left untouched.
+      properties:
+        competition_id:
+          type: integer
+          format: int64
+        opponent_id:
+          type: integer
+          format: int64
+        season:
+          type: string
+        played_at:
+          type: string
+          format: date-time
+        is_home:
+          type: boolean
+        score_for:
+          type: integer
+          format: int32
+        score_against:
+          type: integer
+          format: int32
+        venue:
+          type: string
+        referee:
+          type: string
+        attendance:
+          type: integer
+          format: int32
+        source_match_id:
+          type: string
+        video_url:
+          type: string
+
+    MatchList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Match"
+        total:
+          type: integer
+          format: int64
+          description: Total rows matching the filters, before limit/offset.
+
+    MatchDetail:
+      allOf:
+        - $ref: "#/components/schemas/Match"
+        - type: object
+          description: |
+            The `goals`, `stats` and `heatmap` members are only present when the
+            caller asked for them via `?expand=goals,stats`.
+          properties:
+            goals:
+              type: array
+              nullable: true
+              items:
+                $ref: "#/components/schemas/Goal"
+            stats:
+              type: array
+              nullable: true
+              items:
+                $ref: "#/components/schemas/MatchStat"
+            heatmap:
+              type: object
+              nullable: true
+              additionalProperties: true
+
+    # -- goals ----------------------------------------------------------------
+    Goal:
+      type: object
+      description: |
+        Mirrors the `goals` table. `location_x` / `location_y` are always pitch
+        metres on a 105x68 pitch, origin top-left, attacking left-to-right.
+      required: [id, match_id, minute, goal_type, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        match_id:
+          type: integer
+          format: int64
+        minute:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 130
+        added_minute:
+          type: integer
+          nullable: true
+          format: int32
+        goal_type:
+          $ref: "#/components/schemas/GoalType"
+        body_part:
+          $ref: "#/components/schemas/BodyPart"
+          nullable: true
+        assist_name:
+          type: string
+          nullable: true
+        assist_player_id:
+          type: integer
+          nullable: true
+          format: int64
+        xg:
+          type: number
+          nullable: true
+          format: double
+        xgot:
+          type: number
+          nullable: true
+          format: double
+        location_x:
+          type: number
+          nullable: true
+          format: double
+          minimum: 0
+          maximum: 105
+        location_y:
+          type: number
+          nullable: true
+          format: double
+          minimum: 0
+          maximum: 68
+        distance_to_goal_m:
+          type: number
+          nullable: true
+          format: double
+        previous_action:
+          type: string
+          nullable: true
+        play_pattern:
+          type: string
+          nullable: true
+        season_goal_number:
+          type: integer
+          nullable: true
+          format: int32
+        career_goal_number:
+          type: integer
+          nullable: true
+          format: int32
+        video_url:
+          type: string
+          nullable: true
+        source_goal_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateGoal:
+      type: object
+      required: [match_id, minute, goal_type]
+      properties:
+        match_id:
+          type: integer
+          format: int64
+        minute:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 130
+        added_minute:
+          type: integer
+          format: int32
+        goal_type:
+          $ref: "#/components/schemas/GoalType"
+        body_part:
+          $ref: "#/components/schemas/BodyPart"
+        assist_name:
+          type: string
+        assist_player_id:
+          type: integer
+          format: int64
+        xg:
+          type: number
+          format: double
+        xgot:
+          type: number
+          format: double
+        x:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 105
+          description: Alias for `location_x` on input; stored as location_x.
+        y:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 68
+          description: Alias for `location_y` on input; stored as location_y.
+        distance_to_goal_m:
+          type: number
+          format: double
+        previous_action:
+          type: string
+        play_pattern:
+          type: string
+        season_goal_number:
+          type: integer
+          format: int32
+        career_goal_number:
+          type: integer
+          format: int32
+        video_url:
+          type: string
+        source_goal_id:
+          type: string
+
+    UpdateGoal:
+      type: object
+      description: All fields optional; omitted fields are left untouched.
+      properties:
+        match_id:
+          type: integer
+          format: int64
+        minute:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 130
+        added_minute:
+          type: integer
+          format: int32
+        goal_type:
+          $ref: "#/components/schemas/GoalType"
+        body_part:
+          $ref: "#/components/schemas/BodyPart"
+        assist_name:
+          type: string
+        assist_player_id:
+          type: integer
+          format: int64
+        xg:
+          type: number
+          format: double
+        xgot:
+          type: number
+          format: double
+        x:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 105
+        y:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 68
+        distance_to_goal_m:
+          type: number
+          format: double
+        previous_action:
+          type: string
+        play_pattern:
+          type: string
+        season_goal_number:
+          type: integer
+          format: int32
+        career_goal_number:
+          type: integer
+          format: int32
+        video_url:
+          type: string
+        source_goal_id:
+          type: string
+
+    GoalList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Goal"
+        total:
+          type: integer
+          format: int64
+          description: Total rows matching the filters, before limit/offset.
+
+    GoalDetail:
+      allOf:
+        - $ref: "#/components/schemas/Goal"
+        - type: object
+          description: The goal with its surrounding context.
+          properties:
+            match:
+              type: object
+              nullable: true
+              additionalProperties: true
+            competition:
+              type: object
+              nullable: true
+              additionalProperties: true
+            opponent:
+              type: object
+              nullable: true
+              additionalProperties: true
+            prevGoal:
+              type: object
+              nullable: true
+              additionalProperties: true
+            nextGoal:
+              type: object
+              nullable: true
+              additionalProperties: true
+
+    # -- match stats ----------------------------------------------------------
+    MatchStat:
+      type: object
+      description: |
+        Mirrors the `match_stats` table. `heatmap` is null for matches with no
+        tracking data; render an empty state, not zeros.
+      required: [id, match_id, player_id, goals, assists, shots, shots_on_target, key_passes, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        match_id:
+          type: integer
+          format: int64
+        player_id:
+          type: integer
+          format: int64
+        is_starting:
+          type: boolean
+          nullable: true
+        position_played:
+          type: string
+          nullable: true
+        minutes_played:
+          type: integer
+          nullable: true
+          format: int32
+        goals:
+          type: integer
+          format: int32
+        assists:
+          type: integer
+          format: int32
+        shots:
+          type: integer
+          format: int32
+        shots_on_target:
+          type: integer
+          format: int32
+        xg:
+          type: number
+          nullable: true
+          format: double
+        npxg:
+          type: number
+          nullable: true
+          format: double
+        xa:
+          type: number
+          nullable: true
+          format: double
+        key_passes:
+          type: integer
+          format: int32
+        xg_chain:
+          type: number
+          nullable: true
+          format: double
+        xg_buildup:
+          type: number
+          nullable: true
+          format: double
+        rating:
+          type: number
+          nullable: true
+          format: double
+        heatmap:
+          $ref: "#/components/schemas/Heatmap"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UpdateMatchStat:
+      type: object
+      description: Upsert payload for a match's stat row (idempotent).
+      properties:
+        player_id:
+          type: integer
+          format: int64
+        is_starting:
+          type: boolean
+        position_played:
+          type: string
+        minutes_played:
+          type: integer
+          format: int32
+        goals:
+          type: integer
+          format: int32
+        assists:
+          type: integer
+          format: int32
+        shots:
+          type: integer
+          format: int32
+        shots_on_target:
+          type: integer
+          format: int32
+        xg:
+          type: number
+          format: double
+        npxg:
+          type: number
+          format: double
+        xa:
+          type: number
+          format: double
+        key_passes:
+          type: integer
+          format: int32
+        xg_chain:
+          type: number
+          format: double
+        xg_buildup:
+          type: number
+          format: double
+        rating:
+          type: number
+          format: double
+
+    # -- heatmap --------------------------------------------------------------
+    HeatmapGrid:
+      type: object
+      description: Bin layout. v1 uses 24x16 bins over 105x68 m (5.0 m per cell).
+      required: [nx, ny, cell_w, cell_h, origin]
+      properties:
+        nx:
+          type: integer
+        ny:
+          type: integer
+        cell_w:
+          type: number
+          format: double
+        cell_h:
+          type: number
+          format: double
+        origin:
+          type: string
+          examples: ["top-left"]
+
+    HeatmapBin:
+      type: object
+      description: One occupied cell. x/y is the cell centre in pitch metres.
+      required: [ix, iy, x, y, count]
+      properties:
+        ix:
+          type: integer
+        iy:
+          type: integer
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        count:
+          type: integer
+          format: int64
+
+    HeatmapTotal:
+      type: object
+      description: Summary numbers the UI shows above the pitch.
+      required: [events, touches, duration_s, max_bin_count]
+      properties:
+        events:
+          type: integer
+          format: int64
+        touches:
+          type: integer
+          format: int64
+        duration_s:
+          type: integer
+          format: int64
+        max_bin_count:
+          type: integer
+          format: int64
+
+    Heatmap:
+      type: object
+      description: |
+        The jsonb payload stored on `match_stats.heatmap`. `synthetic` is always
+        true in v1: Understat has no tracking data, so a synthetic heatmap must
+        never be presented as tracking data.
+      required: [match_id, synthetic, grid, bins, totals]
+      properties:
+        match_id:
+          type: integer
+          format: int64
+        synthetic:
+          type: boolean
+        grid:
+          $ref: "#/components/schemas/HeatmapGrid"
+        bins:
+          type: array
+          items:
+            $ref: "#/components/schemas/HeatmapBin"
+        totals:
+          $ref: "#/components/schemas/HeatmapTotal"
+
+    UpsertHeatmap:
+      type: object
+      description: |
+        Upsert payload for a match heatmap. v1 defaults to the 24x16 grid and
+        derives the totals from `grid`, so only the bins need to be sent.
+      properties:
+        grid:
+          $ref: "#/components/schemas/HeatmapGrid"
+        bins:
+          type: array
+          items:
+            $ref: "#/components/schemas/HeatmapBin"
+        totals:
+          $ref: "#/components/schemas/HeatmapTotal"
+        synthetic:
+          type: boolean
+          default: true
+
+    HeatmapAggregate:
+      type: object
+      description: Heatmap merged across every match matching the filters.
+      required: [grid, bins, total_goals, matches]
+      properties:
+        grid:
+          $ref: "#/components/schemas/HeatmapGrid"
+        bins:
+          type: array
+          items:
+            $ref: "#/components/schemas/HeatmapBin"
+        totals:
+          $ref: "#/components/schemas/HeatmapTotal"
+        total_goals:
+          type: integer
+          format: int64
+          description: Number of goals behind the aggregated grid.
+        matches:
+          type: integer
+          format: int64
+          description: Number of matches that contributed to the grid.
+
+    # -- summary --------------------------------------------------------------
+    Summary:
+      type: object
+      description: Dashboard rollup for the current filter set.
+      required:
+        [goals, assists, minutes, by_competition, by_season, by_type, by_opponent]
+      properties:
+        goals:
+          type: integer
+          format: int64
+        assists:
+          type: integer
+          format: int64
+        minutes:
+          type: array
+          description: Histogram of goals by minute of play.
+          items:
+            $ref: "#/components/schemas/MinuteBucket"
+        by_competition:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountBucket"
+        by_season:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountBucket"
+        by_type:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountBucket"
+        by_opponent:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountBucket"
+
+    MinuteBucket:
+      type: object
+      required: [minute, count]
+      properties:
+        minute:
+          type: integer
+          format: int32
+        count:
+          type: integer
+          format: int64
+
+    CountBucket:
+      type: object
+      description: One labelled counter used by every `by_*` rollup.
+      required: [key, count]
+      properties:
+        key:
+          type: string
+          description: Dimension value (competition code, season, goal type, opponent name).
+        id:
+          type: integer
+          nullable: true
+          format: int64
+          description: Row id of the dimension, when there is one.
+        name:
+          type: string
+          description: Human-readable label, when there is one.
+        count:
+          type: integer
+          format: int64
+
+    # -- shots (read model only) ----------------------------------------------
+    Shot:
+      type: object
+      description: Mirrors the `shots` table (raw Understat shot data).
+      required: [id, match_id, player_id, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        match_id:
+          type: integer
+          format: int64
+        player_id:
+          type: integer
+          format: int64
+        minute:
+          type: integer
+          nullable: true
+          format: int32
+        outcome:
+          $ref: "#/components/schemas/ShotOutcome"
+          nullable: true
+        xg:
+          type: number
+          nullable: true
+          format: double
+        location_x:
+          type: number
+          nullable: true
+          format: double
+        location_y:
+          type: number
+          nullable: true
+          format: double
+        body_part:
+          type: string
+          nullable: true
+        situation:
+          type: string
+          nullable: true
+        last_action:
+          type: string
+          nullable: true
+        assist_name:
+          type: string
+          nullable: true
+        source_shot_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
