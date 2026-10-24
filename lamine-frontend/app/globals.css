@@ -1,0 +1,330 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Colors registered as real CSS <color> so they can be transitioned. */
+@property --bg { syntax: "<color>"; inherits: true; initial-value: #f2f1ee }
+@property --bg-raised { syntax: "<color>"; inherits: true; initial-value: #faf9f7 }
+@property --bg-sunken { syntax: "<color>"; inherits: true; initial-value: #e9e8e4 }
+@property --ink { syntax: "<color>"; inherits: true; initial-value: #101014 }
+@property --ink-strong { syntax: "<color>"; inherits: true; initial-value: #000 }
+@property --muted { syntax: "<color>"; inherits: true; initial-value: #1010149e }
+@property --faint { syntax: "<color>"; inherits: true; initial-value: #1010146b }
+@property --line { syntax: "<color>"; inherits: true; initial-value: #10101429 }
+@property --line-strong { syntax: "<color>"; inherits: true; initial-value: #10101466 }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #2d81ff }
+@property --accent-ink { syntax: "<color>"; inherits: true; initial-value: #1659c4 }
+@property --invert-bg { syntax: "<color>"; inherits: true; initial-value: #101014 }
+@property --invert-fg { syntax: "<color>"; inherits: true; initial-value: #f2f1ee }
+@property --danger { syntax: "<color>"; inherits: true; initial-value: #b3261e }
+@property --scanline { syntax: "<color>"; inherits: true; initial-value: #10101408 }
+
+:root {
+  --bg: #f2f1ee;
+  --bg-raised: #faf9f7;
+  --bg-sunken: #e9e8e4;
+  --ink: #101014;
+  --ink-strong: #000;
+  --muted: #1010149e;
+  --faint: #1010146b;
+  --line: #10101429;
+  --line-strong: #10101466;
+  --accent: #2d81ff;
+  --accent-ink: #1659c4;
+  --invert-bg: #101014;
+  --invert-fg: #f2f1ee;
+  --danger: #b3261e;
+  --scanline: #10101408;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #121316;
+  --bg-raised: #101014;
+  --bg-sunken: #060607;
+  --ink: #f2f1ee;
+  --ink-strong: #fff;
+  --muted: #f2f1ee99;
+  --faint: #f2f1ee61;
+  --line: #f2f1ee26;
+  --line-strong: #f2f1ee66;
+  --accent: #2d81ff;
+  --accent-ink: #74aaff;
+  --invert-bg: #fff;
+  --invert-fg: #0b0b0c;
+  --danger: #ff6259;
+  --scanline: #ffffff06;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-raised: var(--bg-raised);
+  --color-bg-sunken: var(--bg-sunken);
+  --color-ink: var(--ink);
+  --color-ink-strong: var(--ink-strong);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-invert-bg: var(--invert-bg);
+  --color-invert-fg: var(--invert-fg);
+  --color-danger: var(--danger);
+  --color-scanline: var(--scanline);
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument), Georgia, serif;
+  /* Tailwind's --ease-out is too weak for entrances. One extra token, not a fork. */
+  --ease-reveal: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html {
+  background: var(--bg);
+  /* The rail is the scrollbar. */
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+/* Theme switch: animate the registered colors, freeze every descendant transition. */
+html.theme-anim {
+  transition:
+    --bg 0.4s, --bg-raised 0.4s, --bg-sunken 0.4s, --ink 0.4s, --ink-strong 0.4s,
+    --muted 0.4s, --faint 0.4s, --line 0.4s, --line-strong 0.4s, --accent 0.4s,
+    --accent-ink 0.4s, --invert-bg 0.4s, --invert-fg 0.4s, --danger 0.4s,
+    --scanline 0.4s;
+}
+
+html.theme-anim body * {
+  transition-duration: 0s !important;
+}
+
+@layer components {
+  .font-display {
+    font-weight: 620;
+    font-stretch: 118%;
+  }
+
+  .hud-label {
+    font-family: var(--font-mono);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+
+  .invert-block {
+    transition:
+      background-color 0.12s linear,
+      color 0.12s linear;
+  }
+
+  .invert-block:hover,
+  .invert-block[data-active="true"] {
+    background: var(--invert-bg);
+    color: var(--invert-fg);
+  }
+
+  .themed-logo {
+    filter: brightness(0);
+  }
+
+  [data-theme="dark"] .themed-logo {
+    filter: brightness(0) invert();
+  }
+
+  .tick {
+    pointer-events: none;
+    width: 11px;
+    height: 11px;
+    position: absolute;
+  }
+
+  .tick::before {
+    content: "";
+    background: var(--line-strong);
+    position: absolute;
+    width: 1px;
+    top: 0;
+    bottom: 0;
+    left: 5px;
+  }
+
+  .tick::after {
+    content: "";
+    background: var(--line-strong);
+    position: absolute;
+    height: 1px;
+    top: 5px;
+    left: 0;
+    right: 0;
+  }
+
+  .tick-half::before {
+    top: 5px;
+  }
+
+  .marquee {
+    display: flex;
+    overflow: hidden;
+  }
+
+  .marquee-track {
+    flex-shrink: 0;
+    min-width: 100%;
+    display: flex;
+    animation: 36s linear infinite marquee-scroll;
+  }
+}
+
+@keyframes marquee-scroll {
+  to {
+    transform: translate(-100%);
+  }
+}
+
+@keyframes wm-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35em);
+  }
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Hero intro — time-based, plays once on load. */
+.wm-letter {
+  animation: wm-in 0.75s var(--ease-reveal) both;
+}
+
+[data-intro] {
+  animation: reveal-in 0.7s var(--ease-reveal) both;
+}
+
+/* Scroll choreography — scroll-driven animations, so it all runs on the
+   compositor with zero JS and zero main-thread work. The hidden states live
+   inside @supports: browsers without scroll timelines show the content as-is
+   instead of hiding it forever. */
+@supports (animation-timeline: view()) {
+  [data-reveal] {
+    animation: reveal-in var(--ease-reveal) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 22%;
+  }
+
+  [data-draw-rule] {
+    animation: rule-draw 1s linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 55%;
+  }
+
+  [data-draw-tick] {
+    animation: fade-in 0.7s var(--ease-reveal) both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+}
+
+/* Ruler rail. */
+.ruler-tick {
+  transform-origin: right center;
+  animation: ruler-tick-in 1s var(--ease-reveal) both;
+}
+
+.ruler-digits {
+  height: 1em;
+  line-height: 1;
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.ruler-digit-col {
+  flex-direction: column;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.2, 1);
+  display: flex;
+}
+
+.ruler-digit-col > span {
+  height: 1em;
+  display: block;
+}
+
+@keyframes ruler-tick-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /* Scroll timelines ignore animation-duration, so opt these out explicitly. */
+  [data-reveal],
+  [data-draw-rule],
+  [data-draw-tick] {
+    animation: none !important;
+  }
+}

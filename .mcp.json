@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp"],
+      "cwd": "frontend",
+      "lifecycle": "lazy",
+      "description": "Browse, search and install shadcn/React Bits registry components"
+    },
+    "rea": {
+      "command": "npx",
+      "args": ["-y", "rea-agents@6.7.0", "mcp"]
+    }
+  }
+}

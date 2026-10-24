@@ -1,0 +1,43 @@
+{
+  "sessions": {
+    "sessions": {
+      "sessions": {
+        "sessions": {
+          "ses_eacdce5e4ffedHyvrqkI54QDCu": {
+            "skills": {
+              "better-ui": {
+                "name": "better-ui",
+                "count": 1,
+                "firstUsedAt": "2026-10-19T07:50:09.987Z",
+                "lastUsedAt": "2026-10-19T07:50:09.987Z"
+              }
+            },
+            "updatedAt": "2026-10-19T07:50:09.987Z"
+          }
+        },
+        "ses_eace94b66ffen599O16SRtd5qD": {
+          "skills": {
+            "animate": {
+              "name": "animate",
+              "count": 1,
+              "firstUsedAt": "2026-10-19T08:03:42.573Z",
+              "lastUsedAt": "2026-10-19T08:03:42.573Z"
+            }
+          },
+          "updatedAt": "2026-10-19T08:03:42.573Z"
+        }
+      },
+      "ses_eac27edb6ffe9KY5reeT0ubY7R": {
+        "skills": {
+          "customize-opencode": {
+            "name": "customize-opencode",
+            "count": 1,
+            "firstUsedAt": "2026-10-19T11:09:22.077Z",
+            "lastUsedAt": "2026-10-19T11:09:22.077Z"
+          }
+        },
+        "updatedAt": "2026-10-19T11:09:22.077Z"
+      }
+    }
+  }
+}
