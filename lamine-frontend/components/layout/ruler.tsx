@@ -1,15 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { scrollToEl, scrollToY } from "./smooth-scroll";
+import { SECTIONS as PAGE_SECTIONS } from "@/lib/sections";
+import { currentScroll, scrollToEl, scrollToY, subscribeScroll } from "@/components/layout/smooth-scroll";
 
-const SECTIONS = [
-  { id: "hero", label: "AIRCRAFT" },
-  { id: "features", label: "TOOLKIT" },
-  { id: "ownership", label: "OWNERSHIP" },
-  { id: "made-with", label: "SHOWCASE" },
-  { id: "start", label: "GET STARTED" },
-];
+// Rail words follow the page order in lib/sections.ts.
+const SECTIONS = PAGE_SECTIONS.map((s) => ({ id: s.id, label: s.nav.toUpperCase() }));
 
 const NAV_H = 48;
 const RAIL_W = 60;
@@ -56,9 +52,7 @@ export default function Ruler() {
   const needle = useRef<HTMLDivElement>(null);
   const readout = useRef<HTMLSpanElement>(null);
   const ghost = useRef<HTMLDivElement>(null);
-  const letters = useRef<(HTMLSpanElement | null)[][]>(
-    SECTIONS.map(() => []),
-  );
+  const letters = useRef<(HTMLSpanElement | null)[][]>(SECTIONS.map(() => []));
   const digits = useRef<(HTMLSpanElement | null)[]>([]);
 
   // MatchMedia gating: desktop pointer only, reduced motion degrades to a plain list.
@@ -66,8 +60,7 @@ export default function Ruler() {
     const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     const fine = window.matchMedia("(pointer: fine) and (hover: hover) and (min-width: 1024px)");
     const motion = window.matchMedia("(prefers-reduced-motion: no-preference)");
-    const sync = () =>
-      setMode(!mobile && fine.matches ? (motion.matches ? "full" : "static") : null);
+    const sync = () => setMode(!mobile && fine.matches ? (motion.matches ? "full" : "static") : null);
     sync();
     fine.addEventListener("change", sync);
     motion.addEventListener("change", sync);
@@ -90,6 +83,13 @@ export default function Ruler() {
     let pending = 0;
     let prevPct = -1;
     let zoomReset = false;
+    let readoutTop = "";
+    let bracketH = "";
+    // Section tops in page coordinates, measured on resize so the scroll frame
+    // never has to read layout.
+    let tops: number[] = SECTIONS.map(() => 0);
+    // The riding words are only shown on very wide screens (see the CSS gate below).
+    const wide = window.matchMedia("(min-width: 1680px)");
     const big: number[] = SECTIONS.map(() => 0);
 
     const measure = () => {
@@ -98,6 +98,10 @@ export default function Ruler() {
       vh = window.innerHeight;
       // Tick rows use percentage tops, so the strip needs the document height.
       if (strip.current) strip.current.style.height = `${docH}px`;
+      tops = SECTIONS.map((sec) => {
+        const el = document.getElementById(sec.id);
+        return el ? el.getBoundingClientRect().top + window.scrollY : 0;
+      });
       SECTIONS.forEach((_, i) => {
         const els = letters.current[i];
         const m = metrics[i];
@@ -113,25 +117,28 @@ export default function Ruler() {
     };
 
     const schedule = () => {
-      if (!pending) pending = requestAnimationFrame(frame);
+      if (!pending)
+        pending = requestAnimationFrame(() => {
+          pending = 0;
+          frame();
+        });
     };
 
-    const frame = () => {
-      pending = 0;
-      const f = clamp01(window.scrollY / Math.max(1, docH - vh));
+    const frame = (scrollY = currentScroll()) => {
+      const f = clamp01(scrollY / Math.max(1, docH - vh));
       const base = NAV_H + EDGE_PAD;
       const span = Math.max(1, vh - NAV_H - 2 * EDGE_PAD);
       const drift = base - f * (NAV_H + 2 * EDGE_PAD);
 
-      strip.current?.style.setProperty("transform", `translate3d(0,${-window.scrollY + drift}px,0)`);
+      strip.current?.style.setProperty("transform", `translate3d(0,${-scrollY + drift}px,0)`);
 
       // Needle + odometer
       const needleY = base + f * span;
       if (needle.current) {
         needle.current.style.transform = `translate3d(0,${needleY}px,0)`;
         needle.current.style.opacity = String(clamp01(f / 0.03));
-        const above = needleY > vh - 26;
-        if (readout.current) readout.current.style.top = above ? "-14px" : "4px";
+        const above = needleY > vh - 26 ? "-14px" : "4px";
+        if (readout.current && above !== readoutTop) readout.current.style.top = readoutTop = above;
       }
 
       const pct = Math.round(100 * f);
@@ -151,8 +158,9 @@ export default function Ruler() {
       if (zoomTarget === 1 && zoom > 0.999) zoom = 1;
 
       if (bracket.current) {
-        bracket.current.style.transform = `translate3d(0,${base + (window.scrollY / docH) * span}px,0)`;
-        bracket.current.style.height = `${Math.max(28, (vh / docH) * span)}px`;
+        bracket.current.style.transform = `translate3d(0,${base + (scrollY / docH) * span}px,0)`;
+        const bh = `${Math.max(28, (vh / docH) * span)}px`;
+        if (bh !== bracketH) bracket.current.style.height = bracketH = bh;
         // Only shown while the rail is hovered.
         bracket.current.style.opacity = String(zoom);
       }
@@ -162,12 +170,9 @@ export default function Ruler() {
 
       if (zoom > 0) {
         TICKS.forEach((t, i) => {
-          const yNear = (t.pct / 100) * docH - window.scrollY + drift;
+          const yNear = (t.pct / 100) * docH - scrollY + drift;
           const yMap = base + (t.pct / 100) * span;
-          rows.current[i]?.style.setProperty(
-            "transform",
-            `translate3d(0,${zoom * (yMap - yNear)}px,0)`,
-          );
+          rows.current[i]?.style.setProperty("transform", `translate3d(0,${zoom * (yMap - yNear)}px,0)`);
           const lbl = labels.current[i];
           if (lbl) lbl.style.opacity = String(0.5 * (1 - zoom));
         });
@@ -181,18 +186,21 @@ export default function Ruler() {
       }
       if (zoom > 0) zoomReset = false;
 
+      if (!wide.matches) {
+        if (zoom !== zoomTarget) schedule();
+        return;
+      }
+
       // Section words. Upcoming sections wait small in a stack at the bottom right.
       // As a section scrolls in, its word climbs onto the rail (rotated), then
       // flips into the top-right stack. The current section's word is large.
       const right = vw - RAIL_W;
       const n = SECTIONS.length;
-      const flips = SECTIONS.map((sec, i) => {
-        const el = document.getElementById(sec.id);
-        if (!el) return { u: 0, l: 0, top: 0 };
-        const top = el.getBoundingClientRect().top;
+      const flips = SECTIONS.map((_, i) => {
+        const top = tops[i] - scrollY;
         if (i === 0) {
           // The hero has the wordmark itself; its word only fades into the top stack.
-          const l = ease(clamp01((window.scrollY - vh * 0.25) / (vh * 0.35)));
+          const l = ease(clamp01((scrollY - vh * 0.25) / (vh * 0.35)));
           return { u: 1, l, top };
         }
         return {
@@ -257,7 +265,6 @@ export default function Ruler() {
       if (settling || zoom !== zoomTarget) schedule();
     };
 
-    const onScroll = () => schedule();
     const onResize = () => {
       measure();
       schedule();
@@ -282,7 +289,9 @@ export default function Ruler() {
     const rail = root.current;
     const ro = new ResizeObserver(onResize);
     ro.observe(document.body);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    // Runs inside Lenis's frame, in step with the page.
+    const unsubscribe = subscribeScroll((y) => frame(y));
+    wide.addEventListener("change", onResize);
     window.addEventListener("resize", onResize);
     rail?.addEventListener("pointerenter", onEnter);
     rail?.addEventListener("pointerleave", onLeave);
@@ -292,7 +301,8 @@ export default function Ruler() {
 
     return () => {
       ro.disconnect();
-      window.removeEventListener("scroll", onScroll);
+      unsubscribe();
+      wide.removeEventListener("change", onResize);
       window.removeEventListener("resize", onResize);
       rail?.removeEventListener("pointerenter", onEnter);
       rail?.removeEventListener("pointerleave", onLeave);
@@ -306,10 +316,7 @@ export default function Ruler() {
 
   if (mode === "static") {
     return (
-      <nav
-        aria-label="Sections"
-        className="fixed right-[72px] bottom-9 z-40 flex flex-col items-end gap-1.5"
-      >
+      <nav aria-label="Sections" className="fixed right-[72px] bottom-9 z-40 flex flex-col items-end gap-1.5">
         {SECTIONS.map((s) => (
           <a
             key={s.id}
@@ -338,9 +345,17 @@ export default function Ruler() {
         aria-valuenow={0}
         className="fixed inset-y-0 right-0 z-40 w-[60px] cursor-crosshair overflow-hidden"
       >
-        <div aria-hidden className="absolute inset-0" style={{ backdropFilter: "blur(9px)", WebkitBackdropFilter: "blur(9px)", backgroundColor: "color-mix(in srgb, var(--bg) 55%, transparent)", maskImage: FROST, WebkitMaskImage: FROST }} />
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundColor: "color-mix(in srgb, var(--bg) 82%, transparent)",
+            maskImage: FROST,
+            WebkitMaskImage: FROST,
+          }}
+        />
 
-        <div ref={strip} aria-hidden className="absolute inset-x-0 top-0">
+        <div ref={strip} aria-hidden className="absolute inset-x-0 top-0 will-change-transform">
           {TICKS.map((t, i) => (
             <div
               key={t.pct}
@@ -382,11 +397,8 @@ export default function Ruler() {
         </div>
 
         {/* Needle + odometer readout */}
-        <div ref={needle} aria-hidden className="absolute inset-x-0 top-0 h-0 opacity-0">
-          <span
-            className="absolute inset-x-0 block h-px bg-accent"
-            style={{ boxShadow: "0 0 6px var(--accent)" }}
-          />
+        <div ref={needle} aria-hidden className="absolute inset-x-0 top-0 h-0 opacity-0 will-change-transform">
+          <span className="absolute inset-x-0 block h-px bg-accent" style={{ boxShadow: "0 0 6px var(--accent)" }} />
           <span
             ref={readout}
             className="absolute right-2 top-1 font-mono whitespace-nowrap text-accent-ink"
@@ -417,8 +429,9 @@ export default function Ruler() {
         <div className="absolute right-0 block h-[3px] w-[60px] bg-ink" />
       </div>
 
-      {/* Section letters riding the rail */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 z-40">
+      {/* Section letters riding the rail — only where the margin is wide enough
+          that they don't sit on top of the content. */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-40 hidden min-[1680px]:block">
         {SECTIONS.map((sec, i) =>
           sec.label.split("").map((ch, li) => (
             <span

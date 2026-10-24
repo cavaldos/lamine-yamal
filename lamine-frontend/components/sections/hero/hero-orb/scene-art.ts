@@ -1,4 +1,5 @@
-// Procedural "film still" placeholders: seeded, so server and client render the same SVG.
+// Procedural "film still" placeholders for the hero spiral when no photos are given.
+// Seeded, so every visit draws the same frames.
 
 type Palette = {
   sky: [string, string, string];
@@ -109,55 +110,4 @@ export function sceneArtMarkup(seed: number): string {
     `<rect width="160" height="90" fill="url(#${id}v)"/>`,
     `</svg>`,
   ].join("");
-}
-
-export default function SceneArt({ seed, className }: { seed: number; className?: string }) {
-  const s = buildScene(seed);
-  const { p, id } = s;
-
-  return (
-    <svg
-      viewBox="0 0 160 90"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden
-      className={className}
-    >
-      <defs>
-        <linearGradient id={`${id}s`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={p.sky[0]} />
-          <stop offset="0.55" stopColor={p.sky[1]} />
-          <stop offset="1" stopColor={p.sky[2]} />
-        </linearGradient>
-        <radialGradient id={`${id}g`} cx={s.sunX / 160} cy={s.sunY / 90} r="0.55">
-          <stop offset="0" stopColor={p.glow} stopOpacity="0.75" />
-          <stop offset="1" stopColor={p.glow} stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id={`${id}v`} cx="0.5" cy="0.5" r="0.75">
-          <stop offset="0.55" stopColor="#000" stopOpacity="0" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.55" />
-        </radialGradient>
-        <linearGradient id={`${id}h`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={p.glow} stopOpacity="0" />
-          <stop offset="1" stopColor={p.glow} stopOpacity="0.35" />
-        </linearGradient>
-      </defs>
-      <rect width="160" height="90" fill={`url(#${id}s)`} />
-      {s.stars.map(([x, y, r], i) => (
-        <circle key={i} cx={x} cy={y} r={r} fill="#fff" opacity={0.7} />
-      ))}
-      <rect width="160" height="90" fill={`url(#${id}g)`} />
-      <circle cx={s.sunX} cy={s.sunY} r={s.sunR} fill={p.sun} opacity={0.92} />
-      <rect y={s.horizon - 14} width="160" height="16" fill={`url(#${id}h)`} />
-      {s.ridges.map((g) => (
-        <polygon key={g.color} points={g.points} fill={g.color} opacity={g.opacity} />
-      ))}
-      {s.figure && (
-        <g fill={p.layers[2]}>
-          <circle cx={s.fx} cy={s.fy - s.fh - 1.4} r={s.fh * 0.16} />
-          <path d={s.body} />
-        </g>
-      )}
-      <rect width="160" height="90" fill={`url(#${id}v)`} />
-    </svg>
-  );
 }

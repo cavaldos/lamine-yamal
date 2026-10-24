@@ -2,259 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import { sceneArtMarkup } from "./scene-art";
+import { currentScroll, subscribeScroll } from "@/components/layout/smooth-scroll";
+import { ARMS, TURNS, SPAN, BIRTH, MAX_CARDS, CARDS_PER_MPX, DENSITY, CARD_H, INNER, ASPECTS, LAPS_PER_SEC, SPIN, SCRUB, WOBBLE_PX, WOBBLE_HZ, FOV, BOW_PX, LIFT_PX, CORNER_PX, SPLIT, SOFT_MAX, SOFT_END, RIM_ALPHA, LINE_ALPHA, TICK_ALPHA, TICKS_PER_ARM, CIRCLE, PULSE_RATE, PULSE_ALPHA, PULSE_SWELL_PX, INTRO_S, BURST, BURST_S, WAVE_PX, SCENES, TEX_W, TEX_H, GRID } from "./config";
+import { clamp01, smooth, easeOut, hash, rgbToHsl, hslToRgb, compile, STRIDE, pushStrip, type RGB } from "./gl-utils";
+import { CARD_VS, CARD_FS, LINE_VS, LINE_FS } from "./shaders";
 
-// A slow spiral galaxy of film stills. Cards are born small and soft at the
+// A slow spiral galaxy of photos. Cards are born small and soft at the
 // centre, then drift outward along six arms, growing and sharpening as they go.
 // Everything is drawn with raw WebGL2: each card is a pillow-curved quad seen
 // through a real perspective, so cards near the screen edge bow visibly.
 
-// ── Tuning ────────────────────────────────────────────────────────────────
-const ARMS = 6;
-const TURNS = 1.05; // windings the spiral makes before reaching SPAN
-const SPAN = 0.7; // spiral radius after TURNS, × viewport half-diagonal
-const BIRTH = 0.08; // where along the arm cards appear (fraction of TURNS)
-const MAX_CARDS = 64;
-const CARDS_PER_MPX = 64 / 1.65; // fewer cards on smaller screens
-const DENSITY = 0.82; // share of arm slots that hold a card
-const CARD_H = 0.21; // card height cap, × viewport height
-const INNER = 0.42; // card scale at birth, relative to the cap
-const ASPECTS = [16 / 9, 4 / 3, 16 / 9, 2.1, 3 / 2, 16 / 9, 1.25];
-const LAPS_PER_SEC = 0.57 / 60; // outward drift
-const SPIN = ((-50 * Math.PI) / 180) / 60; // whole-field rotation, rad/s
-const SCRUB = 0.2 / 1000; // extra drift per scrolled px
-const WOBBLE_PX = 6;
-const WOBBLE_HZ = 0.25;
-const FOV = (40 * Math.PI) / 180;
-const BOW_PX = 32; // centre-to-corner depth of each card's pillow curve
-const LIFT_PX = 110; // how far the pointer pulls a card toward the viewer
-const CORNER_PX = 10;
-const SPLIT = 0.05; // chromatic split at card edges
-const SOFT_MAX = 0.11; // defocus radius at birth, in card UV
-const SOFT_END = 0.2; // radius (× half-diagonal) where cards are fully sharp
-const RIM_ALPHA = 0.1;
-const LINE_ALPHA = 0.065;
-const TICK_ALPHA = 0.16;
-const TICKS_PER_ARM = 16;
-const CIRCLE = 0.56; // construction circle radius, × half-diagonal
-const PULSES = 3; // comets per arm
-const PULSE_RATE = 0.19;
-const PULSE_TAIL = 0.12;
-const PULSE_ALPHA = 0.72;
-const PULSE_SWELL_PX = 3.5;
-const HUE_STEP = 0.4; // turns of hue between neighbouring arms
-const INTRO_S = 4;
-const BURST = 3; // drift speed multiplier right after load
-const BURST_S = 2.5;
-const WAVE_PX = 220; // softness of the intro reveal front
-const SCENES = 18;
-const TEX_W = 512;
-const TEX_H = 288;
-const GRID = 12;
-
-// ── Shaders ───────────────────────────────────────────────────────────────
-const CARD_VS = `#version 300 es
-in vec2 aPos;          // card-local, -0.5..0.5, y down
-uniform vec2 uHalf;    // half viewport, css px
-uniform float uFocal;
-uniform vec2 uCenter;  // card centre, px from screen centre, y down
-uniform vec2 uSize;
-uniform float uBow;
-uniform vec3 uPress;   // xy pointer px, z lift px
-out vec2 vUv;
-void main() {
-  vUv = aPos + 0.5;
-  vec2 p = uCenter + aPos * uSize;
-  // Pillow: middle forward, corners back.
-  float z = uBow * (0.5 - 2.0 * dot(aPos, aPos));
-  vec2 m = (p - uPress.xy) / (max(uSize.x, uSize.y) * 0.7);
-  z += uPress.z * exp(-dot(m, m));
-  gl_Position = vec4(p.x / uHalf.x, -p.y / uHalf.y, 0.0, (uFocal - z) / uFocal);
-}`;
-
-const CARD_FS = `#version 300 es
-precision highp float;
-uniform sampler2D uTex;
-uniform vec4 uCrop;    // xy offset, zw extent of the cover-fit window
-uniform vec2 uSize;
-uniform float uRadius;
-uniform float uSoft;
-uniform float uSplit;
-uniform float uFade;
-uniform float uLoaded;
-uniform float uRim;
-uniform vec3 uBase;
-uniform vec3 uRimColor;
-in vec2 vUv;
-out vec4 outColor;
-
-vec3 tap(vec2 uv, float lod) {
-  return texture(uTex, clamp(uv, uCrop.xy, uCrop.xy + uCrop.zw), lod).rgb;
-}
-
-void main() {
-  vec2 uv = uCrop.xy + vUv * uCrop.zw;
-  vec3 c;
-  if (uSoft > 0.0005) {
-    // Defocus: a golden-angle disc of taps on a blurrier mip.
-    float lod = log2(1.0 + uSoft * 60.0);
-    c = vec3(0.0);
-    for (int i = 0; i < 10; i++) {
-      float f = (float(i) + 0.5) / 10.0;
-      float a = float(i) * 2.39996;
-      c += tap(uv + vec2(cos(a), sin(a)) * sqrt(f) * uSoft * uCrop.zw, lod);
-    }
-    c /= 10.0;
-  } else {
-    // Lens fringe: red and blue drift apart toward the rim.
-    vec2 d = vUv - 0.5;
-    vec2 off = d * dot(d, d) * uSplit * uCrop.zw;
-    c = vec3(tap(uv + off, 0.0).r, tap(uv, 0.0).g, tap(uv - off, 0.0).b);
-  }
-  c = mix(uBase, c, uLoaded);
-
-  // Rounded corners and a hairline rim that follows them.
-  vec2 q = abs((vUv - 0.5) * uSize) - (uSize * 0.5 - uRadius);
-  float e = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - uRadius;
-  float rim = 1.0 - smoothstep(0.0, 1.2, abs(e + 1.0));
-  c = mix(c, uRimColor, rim * uRim);
-  float a = uFade * clamp(0.5 - e, 0.0, 1.0);
-  outColor = vec4(c * a, a);
-}`;
-
-const LINE_VS = `#version 300 es
-in vec2 aPos;
-in vec2 aDir;          // unit offset direction for the ribbon width
-in float aSide;        // -1 / +1
-in float aAlong;       // 0..1 along an arm, < 0 for plain strokes
-uniform vec2 uHalf;
-uniform float uAngle;
-uniform float uWidth;
-uniform float uSwell;
-uniform float uClock;  // pulse clock, already scaled by speed
-uniform float uLag;
-uniform float uReveal;
-uniform float uWave;
-out float vHot;
-out float vSide;
-out float vShow;
-void main() {
-  mat2 r = mat2(cos(uAngle), sin(uAngle), -sin(uAngle), cos(uAngle));
-  vec2 p = r * aPos;
-  float hot = 0.0;
-  if (aAlong >= 0.0) {
-    // Comets run outward; 'behind' is 0 at a head and grows down its tail.
-    float behind = fract(uClock - aAlong * ${PULSES.toFixed(1)} + uLag);
-    hot = exp(-behind / ${PULSE_TAIL}) * smoothstep(0.0, 0.006, behind);
-    hot *= smoothstep(0.03, 0.12, aAlong);
-  }
-  float show = clamp((uReveal - length(aPos)) / uWave, 0.0, 1.0);
-  vHot = hot * show;
-  vShow = show;
-  vSide = aSide;
-  p += r * aDir * aSide * (uWidth + uSwell * hot) * 0.5;
-  gl_Position = vec4(p.x / uHalf.x, -p.y / uHalf.y, 0.0, 1.0);
-}`;
-
-const LINE_FS = `#version 300 es
-precision highp float;
-uniform vec3 uInk;
-uniform vec3 uHotColor;
-uniform float uAlpha;
-uniform float uHotAlpha;
-in float vHot;
-in float vSide;
-in float vShow;
-out vec4 outColor;
-void main() {
-  float soft = 1.0 - smoothstep(0.35, 1.0, abs(vSide));
-  float h = clamp(vHot, 0.0, 1.0);
-  vec3 c = mix(uInk, uHotColor, h);
-  float a = (uAlpha * vShow + uHotAlpha * h) * soft;
-  outColor = vec4(c * a, a);
-}`;
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-type RGB = [number, number, number];
-
-const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
-const smooth = (a: number, b: number, x: number) => {
-  const t = clamp01((x - a) / (b - a));
-  return t * t * (3 - 2 * t);
-};
-const easeOut = (x: number) => 1 - Math.pow(1 - clamp01(x), 3);
-const hash = (n: number) => {
-  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return s - Math.floor(s);
-};
-
-function rgbToHsl([r, g, b]: RGB): RGB {
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  if (max === min) return [0, 0, l];
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  const h =
-    max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  return [h / 6, s, l];
-}
-
-function hslToRgb([h, s, l]: RGB): RGB {
-  const f = (n: number) => {
-    const k = (n + h * 12) % 12;
-    const a = s * Math.min(l, 1 - l);
-    return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-  };
-  return [f(0), f(8), f(4)];
-}
-
-function compile(gl: WebGL2RenderingContext, vs: string, fs: string) {
-  const prog = gl.createProgram()!;
-  for (const [type, src] of [
-    [gl.VERTEX_SHADER, vs],
-    [gl.FRAGMENT_SHADER, fs],
-  ] as const) {
-    const sh = gl.createShader(type)!;
-    gl.shaderSource(sh, src);
-    gl.compileShader(sh);
-    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-      console.error(gl.getShaderInfoLog(sh));
-    }
-    gl.attachShader(prog, sh);
-  }
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    console.error(gl.getProgramInfoLog(prog));
-  }
-  const u = new Proxy({} as Record<string, WebGLUniformLocation | null>, {
-    get: (cache, name: string) =>
-      name in cache ? cache[name] : (cache[name] = gl.getUniformLocation(prog, name)),
-  });
-  return { prog, u };
-}
-
-// Ribbon vertex: x, y, dirX, dirY, side, along
-const STRIDE = 6;
-
-function pushStrip(
-  out: number[],
-  pts: [number, number][],
-  along: (k: number) => number,
-) {
-  for (let k = 0; k < pts.length; k++) {
-    const a = pts[Math.max(0, k - 1)];
-    const b = pts[Math.min(pts.length - 1, k + 1)];
-    const tx = b[0] - a[0];
-    const ty = b[1] - a[1];
-    const l = Math.hypot(tx, ty) || 1;
-    const nx = -ty / l;
-    const ny = tx / l;
-    const t = along(k);
-    out.push(pts[k][0], pts[k][1], nx, ny, -1, t, pts[k][0], pts[k][1], nx, ny, 1, t);
-  }
-}
-
-export default function HeroOrb() {
+export default function HeroOrb({ images = [] }: { images?: string[] }) {
   const root = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -317,8 +75,10 @@ export default function HeroOrb() {
     scratch.height = TEX_H;
     const sctx = scratch.getContext("2d");
     const textures: WebGLTexture[] = [];
-    const loadedAt = new Float32Array(SCENES).fill(-1);
-    for (let i = 0; i < SCENES; i++) {
+    // One texture per photo, or the generated set when there are none.
+    const scenes = images.length || SCENES;
+    const loadedAt = new Float32Array(scenes).fill(-1);
+    for (let i = 0; i < scenes; i++) {
       const tex = gl.createTexture()!;
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -332,10 +92,17 @@ export default function HeroOrb() {
     const loadScene = (i: number) =>
       new Promise<void>((resolve) => {
         const img = new Image();
+        // Remote photos (e.g. YouTube thumbnails) must be CORS-clean to upload to WebGL.
+        img.crossOrigin = "anonymous";
+        img.decoding = "async";
         img.onload = () => {
           if (disposed || !sctx) return resolve();
           sctx.clearRect(0, 0, TEX_W, TEX_H);
-          sctx.drawImage(img, 0, 0, TEX_W, TEX_H);
+          // Cover-fit any photo into the 16:9 texture instead of stretching it.
+          const iw = img.naturalWidth || TEX_W;
+          const ih = img.naturalHeight || TEX_H;
+          const k = Math.max(TEX_W / iw, TEX_H / ih);
+          sctx.drawImage(img, (TEX_W - iw * k) / 2, (TEX_H - ih * k) / 2, iw * k, ih * k);
           gl.bindTexture(gl.TEXTURE_2D, textures[i]);
           gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, scratch);
           gl.generateMipmap(gl.TEXTURE_2D);
@@ -344,11 +111,13 @@ export default function HeroOrb() {
           resolve();
         };
         img.onerror = () => resolve();
-        img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(sceneArtMarkup(i * 3 + 1))}`;
+        img.src = images.length
+          ? images[i % images.length]
+          : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(sceneArtMarkup(i * 3 + 1))}`;
       });
     // One at a time keeps the main thread smooth during the intro.
     (async () => {
-      for (let i = 0; i < SCENES && !disposed; i++) await loadScene(i);
+      for (let i = 0; i < scenes && !disposed; i++) await loadScene(i);
     })();
 
     // ── Theme colours
@@ -369,10 +138,16 @@ export default function HeroOrb() {
     const readTheme = () => {
       ink = readColor("--ink", ink);
       base = readColor("--bg-sunken", base);
-      const [h, s, l] = rgbToHsl(readColor("--accent", [0.18, 0.5, 1]));
-      armColors = Array.from({ length: ARMS }, (_, a) =>
-        hslToRgb([(h + a * HUE_STEP) % 1, Math.min(1, s * 0.95), Math.min(0.62, l)]),
-      );
+      // Blaugrana arms: blue, garnet, blue, garnet… with one gold arm.
+      const club = [
+        readColor("--accent", [0.24, 0.42, 1]),
+        readColor("--garnet", [0.82, 0.08, 0.35]),
+        readColor("--gold", [0.96, 0.77, 0.19]),
+      ];
+      armColors = Array.from({ length: ARMS }, (_, a) => {
+        const [h, s, l] = rgbToHsl(club[a === ARMS - 1 ? 2 : a % 2]);
+        return hslToRgb([h, Math.min(1, s * 0.95), Math.min(0.62, l)]);
+      });
     };
 
     // ── Layout (rebuilt on resize)
@@ -488,6 +263,13 @@ export default function HeroOrb() {
     const t0 = performance.now();
     const ptr = { x: 0, y: 0, tx: 0, ty: 0, lift: 0, tLift: 0 };
 
+    // Fade + lift as the hero scrolls away; the root clips the stage.
+    const applyScroll = (scroll: number) => {
+      const leave = clamp01(scroll / (h * 0.95));
+      st.style.opacity = String(1 - leave * 0.85);
+      st.style.transform = `translate3d(0,${scroll * 0.35}px,0)`;
+    };
+
     const frame = (now: number) => {
       raf = 0;
       if (!w || !h) return;
@@ -500,11 +282,8 @@ export default function HeroOrb() {
       ptr.y += (ptr.ty - ptr.y) * 0.12;
       ptr.lift += (ptr.tLift - ptr.lift) * 0.08;
 
-      // Fade + lift as the hero scrolls away; the root clips the stage.
-      const scroll = window.scrollY;
-      const leave = clamp01(scroll / (h * 0.95));
-      st.style.opacity = String(1 - leave * 0.85);
-      st.style.transform = `translate3d(0,${scroll * 0.35}px,0)`;
+      const scroll = currentScroll();
+      applyScroll(scroll);
 
       const spin = still ? 0.4 : t * SPIN;
       const reveal = still ? 1e6 : easeOut(t / INTRO_S) * (half + 1.5 * cardH + WAVE_PX);
@@ -534,7 +313,7 @@ export default function HeroOrb() {
           const aspect = 1 + (ASPECTS[id % ASPECTS.length] - 1) * smooth(0.03, 0.3, rn);
           const ch = cardH * scale;
           const fade =
-            smooth(0, 0.12, ph) * clamp01((reveal - r) / WAVE_PX) * (loadedAt[id % SCENES] >= 0 ? 1 : 0.6);
+            smooth(0, 0.12, ph) * clamp01((reveal - r) / WAVE_PX) * (loadedAt[id % scenes] >= 0 ? 1 : 0.6);
           if (fade <= 0.001) continue;
           placed.push({
             x,
@@ -542,7 +321,7 @@ export default function HeroOrb() {
             r,
             cw: ch * aspect,
             ch,
-            tex: id % SCENES,
+            tex: id % scenes,
             soft: SOFT_MAX * (1 - smooth(BIRTH * SPAN * 0.5, SOFT_END, rn)),
             fade,
           });
@@ -671,7 +450,12 @@ export default function HeroOrb() {
     });
     window.addEventListener("pointermove", onMove, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
-    window.addEventListener("scroll", kick, { passive: true });
+    // The stage moves in Lenis's frame; the cards redraw on the next one.
+    const unsubscribe = subscribeScroll((y) => {
+      if (!visible || !h) return;
+      applyScroll(y);
+      kick();
+    });
     kick();
 
     return () => {
@@ -682,12 +466,13 @@ export default function HeroOrb() {
       window.clearTimeout(themeTimer);
       window.removeEventListener("pointermove", onMove);
       document.documentElement.removeEventListener("pointerleave", onLeave);
-      window.removeEventListener("scroll", kick);
+      unsubscribe();
       if (raf) cancelAnimationFrame(raf);
       textures.forEach((tx) => gl.deleteTexture(tx));
       gl.deleteProgram(card.prog);
       gl.deleteProgram(line.prog);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- images are a static list
   }, []);
 
   return (
@@ -696,7 +481,7 @@ export default function HeroOrb() {
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      <div ref={stage} className="absolute inset-0">
+      <div ref={stage} className="absolute inset-0 will-change-[transform,opacity]">
         <canvas ref={canvas} className="absolute inset-0" />
       </div>
     </div>

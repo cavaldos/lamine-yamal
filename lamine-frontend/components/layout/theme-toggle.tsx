@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "./icons";
+import { Moon, Sun } from "@/components/ui/icons";
 
 export default function ThemeToggle() {
   return (
@@ -12,7 +12,7 @@ export default function ThemeToggle() {
         const next = root.dataset.theme === "dark" ? "light" : "dark";
         root.dataset.theme = next;
         try {
-          localStorage.setItem("aircraft-theme", next);
+          localStorage.setItem("lamine-theme", next);
         } catch {}
         root.classList.add("theme-anim");
         setTimeout(() => root.classList.remove("theme-anim"), 400);
