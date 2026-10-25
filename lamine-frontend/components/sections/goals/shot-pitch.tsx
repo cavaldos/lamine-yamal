@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { at, tone, type Goal } from "@/lib/goals";
+import { at, goalTitle, tone, type Goal } from "@/lib/goals";
+import { format } from "@/lib/i18n/config";
+import { useDict } from "@/lib/i18n/provider";
 
 // SVG half-pitch with one dot per goal (size = xG). Goals outside the current
 // filter stay as faint dots so the shape of the whole career is still visible.
@@ -18,6 +20,7 @@ export default function ShotPitch({
   onHover: (g: Goal | null) => void;
   onSelect: (g: Goal) => void;
 }) {
+  const t = useDict().goals;
   const svg = useRef<SVGSVGElement>(null);
 
   // Dots pop in the first time the pitch is on screen (see .pitch in globals.css).
@@ -45,7 +48,7 @@ export default function ShotPitch({
       viewBox="-3 -4 74 41"
       className="pitch w-full"
       role="img"
-      aria-label={`Bản đồ ${shown.size} bàn thắng trên phần sân tấn công`}
+      aria-label={format(t.pitchAria, { count: shown.size })}
       onPointerLeave={() => onHover(null)}
     >
       <defs>
@@ -91,7 +94,7 @@ export default function ShotPitch({
             className="cursor-pointer outline-none"
             role="button"
             tabIndex={on ? 0 : -1}
-            aria-label={`Xem bàn #${g.n} vs ${g.opponent}, phút ${g.minute}`}
+            aria-label={format(t.shotAria, { n: g.n, title: goalTitle(g), minute: g.minute })}
             onPointerEnter={() => on && onHover(g)}
             onFocus={() => on && onHover(g)}
             onBlur={() => onHover(null)}

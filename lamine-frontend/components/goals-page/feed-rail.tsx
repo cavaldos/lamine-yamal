@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Film, LinkIcon, Volume, VolumeOff } from "@/components/ui/icons";
 import { watchUrl, type Goal, type GoalVideo } from "@/lib/goals";
+import { localePath } from "@/lib/i18n/config";
+import { useDict, useLocale } from "@/lib/i18n/provider";
 
 const btn =
   "flex h-12 w-12 items-center justify-center rounded-full bg-black/40 ring-1 ring-white/15 backdrop-blur transition-colors hover:bg-white/20 md:bg-white/10";
@@ -32,6 +34,9 @@ export default function FeedRail({
   onFilm: () => void;
   className?: string;
 }) {
+  const dict = useDict();
+  const t = dict.goalsPage;
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -42,7 +47,7 @@ export default function FeedRail({
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/goals#goal-${goal.n}`);
+      await navigator.clipboard.writeText(`${window.location.origin}${localePath(locale, "/goals")}#goal-${goal.n}`);
       setCopied(true);
     } catch {
       // Clipboard can be blocked; nothing else to do.
@@ -51,23 +56,23 @@ export default function FeedRail({
 
   return (
     <div className={`flex flex-col items-center gap-4 ${className}`}>
-      <Action label={muted ? "Bật tiếng" : "Tắt tiếng"}>
-        <button type="button" onClick={onMute} aria-label={muted ? "Bật tiếng" : "Tắt tiếng"} className={btn}>
+      <Action label={muted ? dict.common.unmute : dict.common.mute}>
+        <button type="button" onClick={onMute} aria-label={muted ? dict.common.unmute : dict.common.mute} className={btn}>
           {muted ? <VolumeOff className="h-5 w-5" /> : <Volume className="h-5 w-5" />}
         </button>
       </Action>
-      <Action label="Liền mạch">
-        <button type="button" onClick={onFilm} aria-label="Xem liền mạch từ bàn này" className={btn}>
+      <Action label={t.railFilm}>
+        <button type="button" onClick={onFilm} aria-label={t.railFilmAria} className={btn}>
           <Film className="h-5 w-5" />
         </button>
       </Action>
-      <Action label={copied ? "Đã chép" : "Chia sẻ"}>
-        <button type="button" onClick={copy} aria-label="Chép link bàn thắng" className={btn}>
+      <Action label={copied ? t.railCopied : t.railShare}>
+        <button type="button" onClick={copy} aria-label={t.railCopyAria} className={btn}>
           <LinkIcon className="h-5 w-5" />
         </button>
       </Action>
       <Action label="YouTube">
-        <a href={watchUrl(video)} target="_blank" rel="noreferrer" aria-label="Mở trên YouTube" className={btn}>
+        <a href={watchUrl(video)} target="_blank" rel="noreferrer" aria-label={t.railYoutubeAria} className={btn}>
           <ArrowUpRight className="h-5 w-5" />
         </a>
       </Action>

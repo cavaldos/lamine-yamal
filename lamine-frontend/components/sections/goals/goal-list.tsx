@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { fmtDate, tone, type Goal } from "@/lib/goals";
+import { useDict } from "@/lib/i18n/provider";
 
 // Scrollable list of the filtered goals, newest first.
 export default function GoalList({
@@ -15,6 +16,7 @@ export default function GoalList({
   onSelect: (g: Goal) => void;
   onHover: (g: Goal | null) => void;
 }) {
+  const { goals: t } = useDict();
   const list = useRef<HTMLOListElement>(null);
 
   // Keep the selected row in view inside the list (never scrolls the page).
@@ -56,7 +58,7 @@ export default function GoalList({
             </button>
           </li>
         ))}
-      {goals.length === 0 && <li className="px-8 py-10 text-muted">Không có bàn thắng nào khớp bộ lọc.</li>}
+      {goals.length === 0 && <li className="px-8 py-10 text-muted">{t.listEmpty}</li>}
     </ol>
   );
 }

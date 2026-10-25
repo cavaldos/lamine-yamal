@@ -6,24 +6,22 @@ import { ChevronDown, Film, Play, Search, Swipe, X } from "@/components/ui/icons
 import Select from "@/components/ui/select";
 import {
   ALL,
-  AREAS,
+  areaLabels,
   COMPETITION_LIST,
+  competitionLabels,
   EMPTY_QUERY,
-  KINDS,
+  kindLabels,
+  seasonLabels,
   SEASONS,
-  shortSeason,
-  SORTS,
-  TEAMS,
-  VENUES,
+  sortLabels,
+  teamLabels,
+  venueLabels,
   type GoalQuery,
 } from "@/lib/goals";
+import { format } from "@/lib/i18n/config";
+import { useDict } from "@/lib/i18n/provider";
 
 export type ViewMode = "feed" | "film";
-
-const MODES: [ViewMode, string, typeof Film][] = [
-  ["feed", "Thông thường", Swipe],
-  ["film", "Liền mạch", Film],
-];
 
 // Search, sort, viewing mode and filters. On wide screens the search row sticks
 // under the site nav; on phones it scrolls away to leave room for the grid.
@@ -44,6 +42,12 @@ export default function GoalToolbar({
   onMode: (m: ViewMode) => void;
   onPlayAll: () => void;
 }) {
+  const dict = useDict();
+  const t = dict.goalsPage;
+  const modes: [ViewMode, string, typeof Film][] = [
+    ["feed", t.modeFeed, Swipe],
+    ["film", t.modeFilm, Film],
+  ];
   const input = useRef<HTMLInputElement>(null);
   const bar = useRef<HTMLDivElement>(null);
   const panelId = useId();
@@ -99,23 +103,23 @@ export default function GoalToolbar({
   const filters = (
     <div className="flex flex-col gap-3">
       <FilterChips
-        label="Mùa giải"
-        items={SEASONS.map((s) => (s === ALL ? s : shortSeason(s)))}
+        label={t.filterSeason}
+        items={seasonLabels(dict)}
         value={SEASONS.indexOf(query.season)}
         onChange={(i) => set({ season: SEASONS[i] })}
       />
       <FilterChips
-        label="Giải đấu"
-        items={COMPETITION_LIST}
+        label={t.filterCompetition}
+        items={competitionLabels(dict)}
         value={COMPETITION_LIST.indexOf(query.comp)}
         onChange={(i) => set({ comp: COMPETITION_LIST[i] })}
       />
-      <FilterChips label="Đội" items={TEAMS.map(([k]) => k)} value={query.team} onChange={(team) => set({ team })} />
-      <FilterChips label="Kiểu" items={KINDS.map(([k]) => k)} value={query.kind} onChange={(kind) => set({ kind })} />
-      <FilterChips label="Vị trí" items={AREAS.map(([k]) => k)} value={query.area} onChange={(area) => set({ area })} />
+      <FilterChips label={t.filterTeam} items={teamLabels(dict)} value={query.team} onChange={(team) => set({ team })} />
+      <FilterChips label={t.filterKind} items={kindLabels(dict)} value={query.kind} onChange={(kind) => set({ kind })} />
+      <FilterChips label={t.filterArea} items={areaLabels(dict)} value={query.area} onChange={(area) => set({ area })} />
       <FilterChips
-        label="Sân"
-        items={VENUES.map(([k]) => k)}
+        label={t.filterVenue}
+        items={venueLabels(dict)}
         value={query.venue}
         onChange={(venue) => set({ venue })}
       />
@@ -132,17 +136,17 @@ export default function GoalToolbar({
               <input
                 ref={input}
                 type="search"
-                aria-label="Tìm bàn thắng"
+                aria-label={t.searchAria}
                 value={query.q}
                 onChange={(e) => set({ q: e.target.value })}
-                placeholder="Tìm đối thủ, kiến tạo, ngày, phút…"
+                placeholder={t.searchPlaceholder}
                 className="h-full min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
               />
               {query.q && (
                 <button
                   type="button"
                   onClick={() => set({ q: "" })}
-                  aria-label="Xoá tìm kiếm"
+                  aria-label={dict.common.clearSearch}
                   className="text-faint hover:text-ink"
                 >
                   <X className="h-4 w-4" />
@@ -158,22 +162,22 @@ export default function GoalToolbar({
                 onClick={() => setOpen((o) => !o)}
                 className="hud-label flex h-full items-center gap-2 border-l border-line px-3 text-muted transition-colors hover:text-ink aria-expanded:bg-invert-bg aria-expanded:text-invert-fg"
               >
-                Bộ lọc
+                {t.filters}
                 {activeFilters > 0 && <span className="text-garnet-ink in-aria-expanded:text-invert-fg">· {activeFilters}</span>}
                 <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
               </button>
             </div>
 
             <Select
-              label="Sắp xếp"
-              items={SORTS.map(([label]) => label)}
+              label={t.sort}
+              items={sortLabels(dict)}
               value={query.sort}
               onChange={(sort) => set({ sort })}
               className="h-11 flex-1 sm:w-56 sm:flex-none"
             />
 
-            <div role="radiogroup" aria-label="Chế độ xem" className="flex h-11 border border-line">
-              {MODES.map(([m, label, Icon]) => (
+            <div role="radiogroup" aria-label={t.viewMode} className="flex h-11 border border-line">
+              {modes.map(([m, label, Icon]) => (
                 <button
                   key={m}
                   type="button"
@@ -192,11 +196,11 @@ export default function GoalToolbar({
               type="button"
               onClick={onPlayAll}
               disabled={count === 0}
-              aria-label={`${mode === "film" ? "Phát liền mạch" : "Bắt đầu xem"} ${count} bàn`}
+              aria-label={format(mode === "film" ? t.filmAria : t.startAria, { count })}
               className="ml-auto inline-flex h-11 items-center gap-2 bg-linear-to-r from-accent to-garnet px-4 font-mono text-[11px] font-bold tracking-[0.12em] text-white uppercase transition-opacity hover:opacity-85 disabled:opacity-40"
             >
               <Play className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{mode === "film" ? "Phát liền mạch" : "Bắt đầu xem"} · </span>
+              <span className="hidden sm:inline">{mode === "film" ? t.playFilm : t.startWatching} · </span>
               {count}
             </button>
           </div>
@@ -214,7 +218,7 @@ export default function GoalToolbar({
 
       <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-2.5 md:px-10">
         <p className="hud-label text-faint" aria-live="polite">
-          {count === total ? `${total} bàn thắng` : `${count} / ${total} bàn thắng`}
+          {count === total ? format(t.count, { count: total }) : format(t.countOf, { count, total })}
         </p>
         {filtered && (
           <button
@@ -222,7 +226,7 @@ export default function GoalToolbar({
             onClick={() => onQuery({ ...EMPTY_QUERY, sort: query.sort })}
             className="hud-label text-garnet-ink hover:underline"
           >
-            Xoá bộ lọc
+            {dict.common.clearFilters}
           </button>
         )}
       </div>

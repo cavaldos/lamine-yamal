@@ -8,6 +8,8 @@ import Poster from "@/components/goals-page/poster";
 import { useGoalPlayer } from "@/components/goals-page/use-goal-player";
 import { ChevronDown, ChevronUp, X } from "@/components/ui/icons";
 import { goalVideo, type Goal } from "@/lib/goals";
+import { format } from "@/lib/i18n/config";
+import { useDict } from "@/lib/i18n/provider";
 
 // Normal mode: one goal per screen, swipe or scroll to the next, like TikTok.
 //
@@ -25,6 +27,8 @@ export default function GoalFeed({
   onClose: () => void;
   onFilm: (index: number) => void;
 }) {
+  const dict = useDict();
+  const t = dict.goalsPage;
   const dialog = useRef<HTMLDialogElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const layer = useRef<HTMLDivElement>(null);
@@ -157,7 +161,7 @@ export default function GoalFeed({
   return (
     <dialog
       ref={dialog}
-      aria-label="Xem bàn thắng"
+      aria-label={t.feedAria}
       data-lenis-prevent
       onClose={onClose}
       onKeyDown={onKey}
@@ -172,7 +176,7 @@ export default function GoalFeed({
           return (
             <section
               key={g.id}
-              aria-label={`Bàn #${g.n}`}
+              aria-label={format(dict.goals.goalNo, { n: g.n })}
               className="relative flex h-full snap-start snap-always items-center justify-center md:gap-6 md:py-6"
             >
               <div className={`flex flex-col ${v.vertical ? "feed-v" : "feed-h"}`}>
@@ -250,7 +254,7 @@ export default function GoalFeed({
         <button
           type="button"
           onClick={() => dialog.current?.close()}
-          aria-label="Đóng"
+          aria-label={dict.common.close}
           className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur hover:bg-white/20"
         >
           <X className="h-5 w-5" />
@@ -266,7 +270,7 @@ export default function GoalFeed({
           type="button"
           onClick={() => go(active - 1)}
           disabled={active === 0}
-          aria-label="Bàn trước"
+          aria-label={t.prevGoal}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30"
         >
           <ChevronUp className="h-5 w-5" />
@@ -275,7 +279,7 @@ export default function GoalFeed({
           type="button"
           onClick={() => go(active + 1)}
           disabled={active === goals.length - 1}
-          aria-label="Bàn sau"
+          aria-label={t.nextGoal}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30"
         >
           <ChevronDown className="h-5 w-5" />

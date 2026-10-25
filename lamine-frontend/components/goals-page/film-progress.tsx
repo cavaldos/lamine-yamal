@@ -1,4 +1,6 @@
 import { goalTitle, type Goal } from "@/lib/goals";
+import { format } from "@/lib/i18n/config";
+import { useDict } from "@/lib/i18n/provider";
 
 // The reel's timeline: one segment per goal. Finished goals are full, the
 // playing one fills as it plays (driven through `fillRef`), later ones are empty.
@@ -14,14 +16,15 @@ export default function FilmProgress({
   fillRef: React.RefObject<HTMLSpanElement | null>;
   onJump: (i: number) => void;
 }) {
+  const dict = useDict();
   return (
-    <div className="flex h-5 items-center gap-[2px]" role="group" aria-label="Tiến trình thước phim">
+    <div className="flex h-5 items-center gap-[2px]" role="group" aria-label={dict.goalsPage.filmProgress}>
       {goals.map((g, i) => (
         <button
           key={g.id}
           type="button"
           onClick={() => onJump(i)}
-          aria-label={`Bàn #${g.n} ${goalTitle(g)}`}
+          aria-label={`${format(dict.goals.goalNo, { n: g.n })} ${goalTitle(g)}`}
           aria-current={i === index ? "step" : undefined}
           className="group/seg relative flex h-full min-w-0 flex-1 items-center"
         >

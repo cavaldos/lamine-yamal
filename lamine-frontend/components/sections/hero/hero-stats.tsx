@@ -1,23 +1,24 @@
 import CountUp from "@/components/ui/count-up";
 import { ALL_GOALS } from "@/lib/goals";
 import { PLAYER, TEAM_TITLE_COUNT } from "@/lib/content";
-
-const STATS: [number | string, string][] = [
-  ["13 · 07 · 2007", "Ngày sinh"],
-  [PLAYER.shirt, "Số áo"],
-  [TEAM_TITLE_COUNT, "Danh hiệu tập thể"],
-  [ALL_GOALS.length, "Bàn thắng"],
-];
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 // The row of numbers along the bottom of the hero; they count up after the intro.
-export default function HeroStats() {
+export default async function HeroStats() {
+  const { hero } = await getDictionary();
+  const stats: [number | string, string][] = [
+    ["13 · 07 · 2007", hero.born],
+    [PLAYER.shirt, hero.shirt],
+    [TEAM_TITLE_COUNT, hero.teamTitles],
+    [ALL_GOALS.length, hero.goals],
+  ];
   return (
     <dl
       data-intro="true"
       style={{ animationDelay: "1100ms" }}
       className="relative z-40 mx-auto grid w-full max-w-[1280px] grid-cols-2 border-x border-t border-line bg-bg/88 md:grid-cols-4"
     >
-      {STATS.map(([value, label], i) => (
+      {stats.map(([value, label], i) => (
         <div
           key={label}
           className={`border-line px-6 py-4 md:px-10 ${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t md:border-t-0 md:border-l" : ""}`}

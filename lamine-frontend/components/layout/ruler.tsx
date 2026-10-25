@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { SECTIONS as PAGE_SECTIONS } from "@/lib/sections";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDict } from "@/lib/i18n/provider";
+import { sectionsFor } from "@/lib/sections";
 import { currentScroll, scrollToEl, scrollToY, subscribeScroll } from "@/components/layout/smooth-scroll";
-
-// Rail words follow the page order in lib/sections.ts.
-const SECTIONS = PAGE_SECTIONS.map((s) => ({ id: s.id, label: s.nav.toUpperCase() }));
 
 const NAV_H = 48;
 const RAIL_W = 60;
@@ -41,6 +39,9 @@ const FROST = (() => {
 type Metrics = { adv: number[]; cum: number[]; total: number };
 
 export default function Ruler() {
+  const dict = useDict();
+  // Rail words follow the page order in lib/sections.ts, in the page's language.
+  const SECTIONS = useMemo(() => sectionsFor(dict).map((s) => ({ id: s.id, label: s.nav.toUpperCase() })), [dict]);
   const [mode, setMode] = useState<"full" | "static" | null>(null);
 
   const root = useRef<HTMLDivElement>(null);
@@ -310,13 +311,13 @@ export default function Ruler() {
       rail?.removeEventListener("click", onClick);
       if (pending) cancelAnimationFrame(pending);
     };
-  }, [mode]);
+  }, [mode, SECTIONS]);
 
   if (!mode) return null;
 
   if (mode === "static") {
     return (
-      <nav aria-label="Sections" className="fixed right-[72px] bottom-9 z-40 flex flex-col items-end gap-1.5">
+      <nav aria-label={dict.nav.sections} className="fixed right-[72px] bottom-9 z-40 flex flex-col items-end gap-1.5">
         {SECTIONS.map((s) => (
           <a
             key={s.id}
@@ -337,7 +338,7 @@ export default function Ruler() {
       <div
         ref={root}
         role="scrollbar"
-        aria-label="Page position"
+        aria-label={dict.nav.pagePosition}
         aria-controls="main"
         aria-orientation="vertical"
         aria-valuemin={0}

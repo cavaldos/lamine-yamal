@@ -1,6 +1,8 @@
 import SHOTS from "@/data/goals.json";
 import RAW from "@/data/lamine_yamal_goals_assists.json";
 import { DEMO_VIDEOS, DEMO_POOL } from "@/lib/demo-videos";
+import { format } from "@/lib/i18n/config";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
 // Goal data. The source of truth is data/lamine_yamal_goals_assists.json (every
 // goal, all competitions). data/goals.json holds shot positions and xG for the
@@ -175,7 +177,8 @@ export const watchUrl = (v: GoalVideo) =>
 // "vs Real Madrid" at home, "@ Real Madrid" away.
 export const goalTitle = (g: Goal) => `${g.home ? "vs" : "@"} ${g.opponent}`;
 
-export const ALL = "Tất cả";
+// Value of the "everything" option in every filter. Its label is dict.common.all.
+export const ALL = "all";
 export const SEASONS = [ALL, ...Array.from(new Set(ALL_GOALS.map((g) => g.season)))];
 // Competitions in order of how many goals were scored in them.
 export const COMPETITION_LIST = (() => {
@@ -184,36 +187,75 @@ export const COMPETITION_LIST = (() => {
   return [ALL, ...[...count.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name)];
 })();
 
-// Shot-type filter buttons: [label, test].
-export const KINDS: [string, (g: Goal) => boolean][] = [
+// The filters below are [id, test] pairs; the id picks the label in dict.goals, so the
+// buttons read in the page's language. The first entry of each one means "everything".
+type Test = [id: string, test: (g: Goal) => boolean];
+
+// Shot-type filter buttons.
+export const KINDS: Test[] = [
   [ALL, () => true],
-  ["Chân trái", (g) => g.body === "Left Foot" && g.type !== "Penalty"],
-  ["Chân phải", (g) => g.body === "Right Foot" && g.type !== "Penalty"],
-  ["Penalty", (g) => g.type === "Penalty"],
-  ["Đá phạt", (g) => g.type === "Free Kick"],
+  ["leftFoot", (g) => g.body === "Left Foot" && g.type !== "Penalty"],
+  ["rightFoot", (g) => g.body === "Right Foot" && g.type !== "Penalty"],
+  ["penalty", (g) => g.type === "Penalty"],
+  ["freeKick", (g) => g.type === "Free Kick"],
 ];
 
-export const BODY_VI: Record<string, string> = {
-  "Left Foot": "Chân trái",
-  "Right Foot": "Chân phải",
-  Head: "Đánh đầu",
-};
-export const TYPE_VI: Record<string, string> = {
-  "Open Play": "Bóng sống",
-  Penalty: "Penalty",
-  "Free Kick": "Đá phạt",
-  Volley: "Volley",
-};
+export const AREAS: Test[] = [
+  [ALL, () => true],
+  ["inside", (g) => g.area === "inside"],
+  ["outside", (g) => g.area === "outside"],
+];
+
+export const VENUES: Test[] = [
+  [ALL, () => true],
+  ["home", (g) => g.home],
+  ["away", (g) => !g.home],
+];
+
+export const TEAMS: Test[] = [
+  [ALL, () => true],
+  ["Barcelona", (g) => g.team === "Barcelona"],
+  ["Spain", (g) => g.team === "Spain"],
+];
+
+// [id, compare, byDate]. Date orders get split into seasons in the grid.
+export const SORTS: [id: string, compare: (a: Goal, b: Goal) => number, byDate: boolean][] = [
+  ["newest", (a, b) => b.n - a.n, true],
+  ["oldest", (a, b) => a.n - b.n, true],
+  // Goals without shot data (non-La Liga) sort last.
+  ["hardest", (a, b) => (a.shot?.xg ?? 9) - (b.shot?.xg ?? 9) || b.n - a.n, false],
+  ["farthest", (a, b) => (b.shot?.distance ?? -1) - (a.shot?.distance ?? -1) || b.n - a.n, false],
+];
+
+// Labels for the buttons above, in the page's language.
+const named =
+  (d: Dictionary, group: Record<string, string>) =>
+  ([id]: [string, ...unknown[]]) =>
+    id === ALL ? d.common.all : (group[id] ?? id);
+
+export const kindLabels = (d: Dictionary) => KINDS.map(named(d, d.goals.kinds));
+export const areaLabels = (d: Dictionary) => AREAS.map(named(d, d.goals.areas));
+export const venueLabels = (d: Dictionary) => VENUES.map(named(d, d.goals.venues));
+export const teamLabels = (d: Dictionary) => TEAMS.map(named(d, d.goals.teams));
+export const sortLabels = (d: Dictionary) => SORTS.map(named(d, d.goals.sorts));
+export const seasonLabels = (d: Dictionary) => SEASONS.map((s) => (s === ALL ? d.common.all : shortSeason(s)));
+export const competitionLabel = (name: string, d: Dictionary) => d.goals.competitions[name] ?? name;
+export const competitionLabels = (d: Dictionary) =>
+  COMPETITION_LIST.map((c) => (c === ALL ? d.common.all : competitionLabel(c, d)));
+
+export const bodyLabel = (g: Goal, d: Dictionary) => (g.body ? (d.goals.body[g.body] ?? g.body) : undefined);
+export const typeLabel = (g: Goal, d: Dictionary) => d.goals.type[g.type] ?? g.type;
 
 // Dot colour: penalties gold, otherwise blue for the left foot, garnet for the right.
 export const tone = (g: Goal) =>
   g.type === "Penalty" ? "var(--gold)" : g.body === "Left Foot" ? "var(--accent)" : "var(--garnet)";
 
-export const LEGEND: [string, string][] = [
-  ["Chân trái", "var(--accent)"],
-  ["Chân phải", "var(--garnet)"],
-  ["Penalty", "var(--gold)"],
-];
+// [label key in dict.goals, colour]
+export const LEGEND = [
+  ["legendLeft", "var(--accent)"],
+  ["legendRight", "var(--garnet)"],
+  ["legendPenalty", "var(--gold)"],
+] as const;
 
 export const fmtDate = (iso: string) => iso.split("-").reverse().join("/");
 export const shortSeason = (season: string) => season.replace(/20(\d\d)\/20(\d\d)/, "$1/$2");
@@ -239,67 +281,56 @@ export function goalStats(goals: Goal[]) {
 // ---- Search, filters and sorting for the /goals page ----
 
 // Lowercase without accents, so a query typed without diacritics still matches
-// the Vietnamese labels, and "atletico" finds "Atlético".
+// "Tiếng Việt" or "Atlético", and "atletico" finds "Atlético".
 export const fold = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "d").toLowerCase();
 
-// Everything a visitor might type to find a goal.
-const HAYSTACK = new Map(
-  ALL_GOALS.map((g) => [
-    g.id,
-    fold(
-      [
-        g.opponent,
-        g.score,
-        g.assist ?? "không kiến tạo",
-        g.competition,
-        g.team,
-        g.season,
-        shortSeason(g.season),
-        g.date,
-        fmtDate(g.date),
-        g.minute,
-        `phút ${parseInt(g.minute)}`,
-        `#${g.n}`,
-        `bàn ${g.n}`,
-        g.body ? (BODY_VI[g.body] ?? g.body) : "",
-        TYPE_VI[g.type] ?? g.type,
-        g.home ? "sân nhà" : "sân khách",
-        g.area === "outside" ? "ngoài vòng cấm" : g.area === "inside" ? "trong vòng cấm" : "",
-      ].join(" · "),
-    ),
-  ]),
-);
+// Everything a visitor might type to find a goal, in the page's language. Built once per dictionary.
+const haystacks = new WeakMap<Dictionary, Map<string, string>>();
 
-// Every word has to appear somewhere: "real 2024" finds the Clásico goal of 2024.
-export function matches(g: Goal, query: string) {
-  const words = fold(query).split(/\s+/).filter(Boolean);
-  const hay = HAYSTACK.get(g.id) ?? "";
-  return words.every((w) => hay.includes(w));
+function haystackFor(d: Dictionary) {
+  let map = haystacks.get(d);
+  if (!map) {
+    const h = d.goals.haystack;
+    map = new Map(
+      ALL_GOALS.map((g) => [
+        g.id,
+        fold(
+          [
+            g.opponent,
+            g.score,
+            g.assist ?? h.noAssist,
+            g.competition,
+            competitionLabel(g.competition, d),
+            g.team,
+            d.goals.teams[g.team] ?? g.team,
+            g.season,
+            shortSeason(g.season),
+            g.date,
+            fmtDate(g.date),
+            g.minute,
+            format(h.minute, { n: parseInt(g.minute) }),
+            `#${g.n}`,
+            format(h.goal, { n: g.n }),
+            bodyLabel(g, d) ?? "",
+            typeLabel(g, d),
+            g.home ? h.home : h.away,
+            g.area ? d.goals.areas[g.area] : "",
+          ].join(" · "),
+        ),
+      ]),
+    );
+    haystacks.set(d, map);
+  }
+  return map;
 }
 
-type Test = [string, (g: Goal) => boolean];
-
-export const AREAS: Test[] = [
-  [ALL, () => true],
-  ["Trong vòng cấm", (g) => g.area === "inside"],
-  ["Ngoài vòng cấm", (g) => g.area === "outside"],
-];
-
-export const VENUES: Test[] = [
-  [ALL, () => true],
-  ["Sân nhà", (g) => g.home],
-  ["Sân khách", (g) => !g.home],
-];
-
-// [label, compare, byDate]. Date orders get split into seasons in the grid.
-export const SORTS: [string, (a: Goal, b: Goal) => number, boolean][] = [
-  ["Mới nhất", (a, b) => b.n - a.n, true],
-  ["Cũ nhất", (a, b) => a.n - b.n, true],
-  // Goals without shot data (non-La Liga) sort last.
-  ["Khó nhất (xG thấp)", (a, b) => (a.shot?.xg ?? 9) - (b.shot?.xg ?? 9) || b.n - a.n, false],
-  ["Xa nhất", (a, b) => (b.shot?.distance ?? -1) - (a.shot?.distance ?? -1) || b.n - a.n, false],
-];
+// Every word has to appear somewhere: "real 2024" finds the Clásico goal of 2024.
+export function matches(g: Goal, query: string, d: Dictionary) {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  const hay = haystackFor(d).get(g.id) ?? "";
+  return words.every((w) => hay.includes(w));
+}
 
 export type GoalQuery = {
   q: string;
@@ -312,15 +343,9 @@ export type GoalQuery = {
   sort: number;
 };
 
-export const TEAMS: Test[] = [
-  [ALL, () => true],
-  ["Barcelona", (g) => g.team === "Barcelona"],
-  ["Spain", (g) => g.team === "Spain"],
-];
-
 export const EMPTY_QUERY: GoalQuery = { q: "", season: ALL, comp: ALL, team: 0, kind: 0, area: 0, venue: 0, sort: 0 };
 
-export function queryGoals(f: GoalQuery) {
+export function queryGoals(f: GoalQuery, d: Dictionary) {
   return ALL_GOALS.filter(
     (g) =>
       (f.season === ALL || g.season === f.season) &&
@@ -329,6 +354,6 @@ export function queryGoals(f: GoalQuery) {
       KINDS[f.kind][1](g) &&
       AREAS[f.area][1](g) &&
       VENUES[f.venue][1](g) &&
-      matches(g, f.q),
+      matches(g, f.q, d),
   ).sort(SORTS[f.sort][1]);
 }

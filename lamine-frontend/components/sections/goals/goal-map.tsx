@@ -8,11 +8,13 @@ import GoalStats from "@/components/sections/goals/goal-stats";
 import ShotLegend from "@/components/sections/goals/shot-legend";
 import { playGoal } from "@/components/sections/goals/play-goal";
 import ShotPitch from "@/components/sections/goals/shot-pitch";
-import { ALL, ALL_GOALS, KINDS, SEASONS, shortSeason, type Goal } from "@/lib/goals";
+import { ALL, ALL_GOALS, KINDS, kindLabels, seasonLabels, SEASONS, type Goal } from "@/lib/goals";
+import { useDict } from "@/lib/i18n/provider";
 
 // The interactive part of the goals section. Owns the filter, the selected goal
 // and the hovered goal; hovering previews a goal, clicking pins it and plays its clip.
 export default function GoalMap({ action }: { action?: React.ReactNode }) {
+  const dict = useDict();
   const [season, setSeason] = useState(ALL);
   const [kind, setKind] = useState(0);
   const [selected, setSelected] = useState<Goal>(ALL_GOALS[ALL_GOALS.length - 1]);
@@ -26,7 +28,7 @@ export default function GoalMap({ action }: { action?: React.ReactNode }) {
   const focus = hover ?? selected;
   const pick = (g: Goal) => {
     setSelected(g);
-    playGoal(g);
+    playGoal(g, dict);
   };
 
   return (
@@ -41,12 +43,12 @@ export default function GoalMap({ action }: { action?: React.ReactNode }) {
       <div className="flex min-w-0 flex-col bg-bg">
         <div className="flex flex-col gap-3 border-b border-line px-6 py-5 md:px-8">
           <FilterChips
-            label="Mùa giải"
-            items={SEASONS.map((s) => (s === ALL ? s : shortSeason(s)))}
+            label={dict.goalsPage.filterSeason}
+            items={seasonLabels(dict)}
             value={SEASONS.indexOf(season)}
             onChange={(i) => setSeason(SEASONS[i])}
           />
-          <FilterChips label="Kiểu" items={KINDS.map(([k]) => k)} value={kind} onChange={setKind} />
+          <FilterChips label={dict.goalsPage.filterKind} items={kindLabels(dict)} value={kind} onChange={setKind} />
         </div>
         <GoalDetail goal={focus} />
         <GoalList goals={visible} selectedId={selected.id} onSelect={pick} onHover={setHover} />

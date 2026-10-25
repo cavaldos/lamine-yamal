@@ -1,13 +1,15 @@
 import { goalStats, type Goal } from "@/lib/goals";
+import { useDict } from "@/lib/i18n/provider";
 
 // Totals for whatever the filters currently show.
 export default function GoalStats({ goals }: { goals: Goal[] }) {
+  const t = useDict().goals;
   const s = goalStats(goals);
   const items: [string, string][] = [
-    [String(s.goals), "Bàn thắng"],
-    [s.tracked ? s.xg.toFixed(1) : "—", "Tổng xG"],
-    [s.tracked ? `${s.dist.toFixed(1)}m` : "—", "Cự ly TB"],
-    [String(s.outside), "Ngoài vòng cấm"],
+    [String(s.goals), t.statGoals],
+    [s.tracked ? s.xg.toFixed(1) : "—", t.statXg],
+    [s.tracked ? `${s.dist.toFixed(1)}m` : "—", t.statDistance],
+    [String(s.outside), t.statOutside],
   ];
   return (
     <dl className="mt-6 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">

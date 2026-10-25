@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { currentScroll, scrollToY, subscribeScroll } from "@/components/layout/smooth-scroll";
 import { createMotes, drawFloor, readFloorColors, type FloorColors } from "@/components/sections/journey/floor";
 import Station from "@/components/sections/journey/station";
@@ -16,7 +16,8 @@ import {
   SECTION_HEIGHT,
 } from "@/components/sections/journey/world";
 import YearRail from "@/components/sections/journey/year-rail";
-import { JOURNEY } from "@/lib/content";
+import { chaptersFor } from "@/lib/content";
+import { useDict } from "@/lib/i18n/provider";
 import { sectionMeta } from "@/lib/sections";
 
 // The pinned 3D flight. Per-frame work writes styles directly (no React state)
@@ -31,7 +32,9 @@ export default function FlightJourney() {
   const dateOut = useRef<HTMLSpanElement>(null);
   const hint = useRef<HTMLParagraphElement>(null);
   const dots = useRef<(HTMLLIElement | null)[]>([]);
-  const meta = sectionMeta("journey");
+  const dict = useDict();
+  const meta = sectionMeta(dict, "journey");
+  const chapters = useMemo(() => chaptersFor(dict), [dict]);
 
   useEffect(() => {
     const sec = section.current;
@@ -49,7 +52,7 @@ export default function FlightJourney() {
     let secTop = 0;
     let travel = 1;
     // Last values written per station, so unchanged styles are not rewritten.
-    const last = JOURNEY.map(() => ({ t: "", o: "", v: "", p: "" }));
+    const last = chapters.map(() => ({ t: "", o: "", v: "", p: "" }));
     let colors: FloorColors = { line: "#fff", accent: "#3d6bff", garnet: "#d1155a", gold: "#f4c430" };
     const motes = createMotes();
     const readColors = () => {
@@ -105,7 +108,7 @@ export default function FlightJourney() {
       if (now !== active) {
         active = now;
         if (counter.current) counter.current.textContent = String(now + 1).padStart(2, "0");
-        if (dateOut.current) dateOut.current.textContent = JOURNEY[now].date;
+        if (dateOut.current) dateOut.current.textContent = chapters[now].date;
         dots.current.forEach((dot, i) => dot?.setAttribute("data-active", String(i === now)));
       }
     };
@@ -153,7 +156,7 @@ export default function FlightJourney() {
       unsubscribe();
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [chapters]);
 
   const jump = (i: number) => {
     const sec = section.current;
@@ -182,7 +185,7 @@ export default function FlightJourney() {
         />
         <canvas ref={canvas} aria-hidden className="absolute inset-0" />
 
-        {JOURNEY.map((ch, i) => {
+        {chapters.map((ch, i) => {
           const initial = place(i, i);
           return (
             <div
@@ -218,10 +221,10 @@ export default function FlightJourney() {
             {meta.label}
           </p>
           <p className="hud-label text-faint">
-            Chương <span ref={counter} className="text-ink">01</span> / {String(N).padStart(2, "0")}
+            {dict.journey.chapter} <span ref={counter} className="text-ink">01</span> / {String(N).padStart(2, "0")}
             <span className="mx-2">·</span>
             <span ref={dateOut} className="text-garnet-ink">
-              {JOURNEY[0].date}
+              {chapters[0].date}
             </span>
           </p>
         </div>
@@ -237,7 +240,7 @@ export default function FlightJourney() {
           ref={hint}
           className="hud-label pointer-events-none absolute bottom-8 left-1/2 z-[60] -translate-x-1/2 whitespace-nowrap text-muted"
         >
-          <span className="inline-block animate-pulse">Cuộn để bay qua hành trình ↓</span>
+          <span className="inline-block animate-pulse">{dict.journey.scrollHint}</span>
         </p>
 
         <div className="absolute inset-x-0 bottom-0 z-[60] h-[3px] bg-line">

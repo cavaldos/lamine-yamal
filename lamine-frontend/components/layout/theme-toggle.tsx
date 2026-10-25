@@ -1,12 +1,14 @@
 "use client";
 
 import { Moon, Sun } from "@/components/ui/icons";
+import { useDict } from "@/lib/i18n/provider";
 
 export default function ThemeToggle() {
+  const dict = useDict();
   return (
     <button
       type="button"
-      aria-label="Toggle colour theme"
+      aria-label={dict.nav.toggleTheme}
       onClick={() => {
         const root = document.documentElement;
         const next = root.dataset.theme === "dark" ? "light" : "dark";

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ARCHIVE_PHOTOS } from "@/lib/content";
+import { useDict } from "@/lib/i18n/provider";
 import PhotoFrame from "@/components/ui/photo-frame";
 import { currentScroll, subscribeScroll } from "@/components/layout/smooth-scroll";
 
@@ -11,6 +12,7 @@ const PARALLAX = 0.06; // how far each photo's year drifts against the track
 // Vertical scroll drives a horizontal film strip. The section is as tall as the
 // strip is wide, so one pixel of scroll moves the strip one pixel.
 export default function PhotoReel() {
+  const { archive, common } = useDict();
   const section = useRef<HTMLDivElement>(null);
   const view = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLOListElement>(null);
@@ -98,7 +100,7 @@ export default function PhotoReel() {
     <div ref={section} className="relative" style={{ height: "300svh" }}>
       <div ref={view} className="sticky top-12 flex h-[calc(100svh-3rem)] flex-col justify-center overflow-hidden">
         <div className="px-6 pb-8 md:px-10">
-          <p className="hud-label text-faint">Cuộn để lật album ↓</p>
+          <p className="hud-label text-faint">{archive.scrollHint}</p>
         </div>
         <ol ref={track} className="flex w-max gap-4 px-6 will-change-transform md:gap-6 md:px-10">
           {ARCHIVE_PHOTOS.map((ph, i) => (
@@ -107,16 +109,16 @@ export default function PhotoReel() {
                 <div className="relative aspect-[4/5] overflow-hidden">
                   {/* Oversized and shifted against the strip for depth. */}
                   <div data-parallax className="absolute -inset-x-[12%] inset-y-0 will-change-transform">
-                    <PhotoFrame src={ph.src} alt={ph.caption} year={ph.year} tag={false} className="h-full w-full" />
+                    <PhotoFrame src={ph.src} alt={archive.captions[i]} year={ph.year} tag={false} className="h-full w-full" />
                   </div>
                   {!ph.src && (
                     <span className="hud-label absolute top-3 left-3 border border-line-strong bg-bg/80 px-2 py-1 text-muted">
-                      Ảnh demo
+                      {common.demoPhoto}
                     </span>
                   )}
                 </div>
                 <figcaption className="flex items-baseline justify-between gap-4 border-t border-line px-4 py-3">
-                  <span className="text-[15px] leading-snug text-ink">{ph.caption}</span>
+                  <span className="text-[15px] leading-snug text-ink">{archive.captions[i]}</span>
                   <span className="hud-label shrink-0 text-garnet-ink">{ph.year}</span>
                 </figcaption>
               </figure>

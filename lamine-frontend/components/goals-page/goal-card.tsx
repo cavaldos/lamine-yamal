@@ -3,10 +3,22 @@
 import HoverPreview, { useHoverPreview } from "@/components/ui/hover-preview";
 import { Play } from "@/components/ui/icons";
 import Poster from "@/components/goals-page/poster";
-import { BODY_VI, fmtDate, goalTitle, goalVideo, tone, TYPE_VI, type Goal } from "@/lib/goals";
+import {
+  bodyLabel,
+  competitionLabel,
+  fmtDate,
+  goalTitle,
+  goalVideo,
+  tone,
+  typeLabel,
+  type Goal,
+} from "@/lib/goals";
+import { format } from "@/lib/i18n/config";
+import { useDict } from "@/lib/i18n/provider";
 
 // One goal in the grid: a 9:16 poster, like a short-video feed. Hovering plays the clip muted in place.
 export default function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => void }) {
+  const dict = useDict();
   const video = goalVideo(goal);
   const penalty = goal.type === "Penalty";
   const { active, handlers } = useHoverPreview();
@@ -16,7 +28,7 @@ export default function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => v
       type="button"
       onClick={onOpen}
       {...handlers}
-      aria-label={`Xem bàn #${goal.n} ${goalTitle(goal)}, phút ${goal.minute}`}
+      aria-label={format(dict.goals.shotAria, { n: goal.n, title: goalTitle(goal), minute: goal.minute })}
       className="thumb-zoom group relative block aspect-[9/16] w-full overflow-hidden bg-bg-sunken text-left text-white outline outline-line focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-accent"
     >
       <Poster video={video} className="absolute inset-0 h-full w-full object-cover" />
@@ -27,7 +39,7 @@ export default function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => v
         <span className="flex flex-col items-start gap-1.5">
           <span className="hud-label text-white/75">#{String(goal.n).padStart(2, "0")}</span>
           {video.demo && (
-            <span className="hud-label border border-white/35 px-1.5 py-0.5 text-[9px] text-white/80">Demo</span>
+            <span className="hud-label border border-white/35 px-1.5 py-0.5 text-[9px] text-white/80">{dict.goals.demoTag}</span>
           )}
         </span>
         <span className="font-display text-3xl leading-none font-bold tracking-[-0.04em]">{goal.minute}</span>
@@ -50,9 +62,9 @@ export default function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => v
         <span className="text-[13px] text-white/70">{goal.score}</span>
         <span className="mt-1 flex items-center gap-1.5 text-[12px] text-white/75">
           <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: tone(goal) }} />
-          {penalty ? "Penalty" : goal.body ? (BODY_VI[goal.body] ?? goal.body) : TYPE_VI[goal.type]}
+          {penalty ? dict.goals.type.Penalty : (bodyLabel(goal, dict) ?? typeLabel(goal, dict))}
           <span className="text-white/40">·</span>
-          {goal.competition}
+          {competitionLabel(goal.competition, dict)}
         </span>
       </span>
     </button>

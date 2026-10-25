@@ -1,5 +1,6 @@
 import { fold } from "@/lib/goals";
-import { HIGHLIGHTS, type Video } from "@/lib/content";
+import { HIGHLIGHTS, videoTitle, type Video } from "@/lib/content";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
 // Search, filter and sort for the /highlights page.
 
@@ -7,28 +8,41 @@ import { HIGHLIGHTS, type Video } from "@/lib/content";
 export const lengthSeconds = (v: Video) =>
   (v.length ?? "0").split(":").reduce((total, part) => total * 60 + Number(part), 0);
 
-export const fmtMinutes = (s: number) => `${Math.round(s / 60)} phút`;
-
-export const ALL_SOURCES = "Tất cả";
+// Value of the "all sources" option. Its label is dict.common.all.
+export const ALL_SOURCES = "all";
 export const SOURCES = [ALL_SOURCES, ...Array.from(new Set(HIGHLIGHTS.map((v) => v.source)))];
 
-// [label, compare]. The first keeps the order of lib/content.ts.
-export const SORTS: [string, (a: Video, b: Video) => number][] = [
-  ["Nổi bật", () => 0],
-  ["Dài nhất", (a, b) => lengthSeconds(b) - lengthSeconds(a)],
-  ["Ngắn nhất", (a, b) => lengthSeconds(a) - lengthSeconds(b)],
+export const sourceLabels = (d: Dictionary) => SOURCES.map((s) => (s === ALL_SOURCES ? d.common.all : s));
+
+// [id, compare]; the id picks the label in dict.highlightsPage.sorts. The first keeps the order of lib/content.ts.
+export const SORTS: [id: keyof Dictionary["highlightsPage"]["sorts"], compare: (a: Video, b: Video) => number][] = [
+  ["featured", () => 0],
+  ["longest", (a, b) => lengthSeconds(b) - lengthSeconds(a)],
+  ["shortest", (a, b) => lengthSeconds(a) - lengthSeconds(b)],
 ];
+
+export const sortLabels = (d: Dictionary) => SORTS.map(([id]) => d.highlightsPage.sorts[id]);
 
 export type HighlightQuery = { q: string; source: number; sort: number };
 
 export const EMPTY_QUERY: HighlightQuery = { q: "", source: 0, sort: 0 };
 
-const HAYSTACK = new Map(HIGHLIGHTS.map((v) => [v.youtube, fold(`${v.title} ${v.source}`)]));
+// The title in the page's language, the original one and the channel. Built once per dictionary.
+const haystacks = new WeakMap<Dictionary, Map<string, string>>();
 
-export function queryHighlights(f: HighlightQuery) {
+function haystackFor(d: Dictionary) {
+  let map = haystacks.get(d);
+  if (!map) {
+    map = new Map(HIGHLIGHTS.map((v) => [v.youtube, fold(`${videoTitle(v, d)} ${v.title} ${v.source}`)]));
+    haystacks.set(d, map);
+  }
+  return map;
+}
+
+export function queryHighlights(f: HighlightQuery, d: Dictionary) {
   const words = fold(f.q).split(/\s+/).filter(Boolean);
+  const hay = haystackFor(d);
   return HIGHLIGHTS.filter(
-    (v) =>
-      (f.source === 0 || v.source === SOURCES[f.source]) && words.every((w) => HAYSTACK.get(v.youtube)!.includes(w)),
+    (v) => (f.source === 0 || v.source === SOURCES[f.source]) && words.every((w) => hay.get(v.youtube)!.includes(w)),
   ).sort(SORTS[f.sort][1]);
 }

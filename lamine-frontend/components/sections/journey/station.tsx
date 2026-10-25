@@ -1,9 +1,9 @@
 import PhotoFrame from "@/components/ui/photo-frame";
-import type { Chapter } from "@/lib/content";
+import type { LocalizedChapter } from "@/lib/content";
 
 // One chapter card: photo on one side, date/title/story/stat on the other.
 // Odd chapters flip sides so the flight zig-zags.
-export default function Station({ chapter, index }: { chapter: Chapter; index: number }) {
+export default function Station({ chapter, index }: { chapter: LocalizedChapter; index: number }) {
   const flip = index % 2 === 1;
   return (
     <article className="grid overflow-hidden border border-line-strong bg-bg-raised/95 shadow-[0_40px_120px_-30px_rgb(0_0_0/0.8)] md:grid-cols-2">
@@ -24,9 +24,9 @@ export default function Station({ chapter, index }: { chapter: Chapter; index: n
         {chapter.stat && (
           <p className="flex items-baseline gap-3 border-t border-line pt-4">
             <span className="text-blaugrana font-display text-5xl leading-none font-bold tracking-[-0.04em] md:text-6xl">
-              {chapter.stat[0]}
+              {chapter.stat}
             </span>
-            <span className="hud-label text-muted">{chapter.stat[1]}</span>
+            <span className="hud-label text-muted">{chapter.statLabel}</span>
           </p>
         )}
       </div>

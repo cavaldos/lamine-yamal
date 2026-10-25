@@ -3,7 +3,9 @@
 import { useEffect, useRef } from "react";
 import { Play, Search, X } from "@/components/ui/icons";
 import Select from "@/components/ui/select";
-import { EMPTY_QUERY, SORTS, SOURCES, type HighlightQuery } from "@/lib/highlights";
+import { EMPTY_QUERY, sortLabels, sourceLabels, type HighlightQuery } from "@/lib/highlights";
+import { format } from "@/lib/i18n/config";
+import { useDict } from "@/lib/i18n/provider";
 
 // Search, source, sort and "play all". On wide screens the bar sticks under the
 // site nav; on phones it scrolls away to leave room for the grid.
@@ -20,6 +22,8 @@ export default function HighlightToolbar({
   total: number;
   onPlayAll: () => void;
 }) {
+  const dict = useDict();
+  const t = dict.highlightsPage;
   const input = useRef<HTMLInputElement>(null);
   const set = (patch: Partial<HighlightQuery>) => onQuery({ ...query, ...patch });
   const filtered = query.source !== 0 || query.q.trim() !== "";
@@ -46,17 +50,17 @@ export default function HighlightToolbar({
             <input
               ref={input}
               type="search"
-              aria-label="Tìm video"
+              aria-label={t.searchAria}
               value={query.q}
               onChange={(e) => set({ q: e.target.value })}
-              placeholder="Tìm theo tên video hoặc kênh…"
+              placeholder={t.searchPlaceholder}
               className="h-full min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
             />
             {query.q ? (
               <button
                 type="button"
                 onClick={() => set({ q: "" })}
-                aria-label="Xoá tìm kiếm"
+                aria-label={dict.common.clearSearch}
                 className="pr-3 text-faint hover:text-ink"
               >
                 <X className="h-4 w-4" />
@@ -67,15 +71,15 @@ export default function HighlightToolbar({
           </div>
 
           <Select
-            label="Nguồn"
-            items={SOURCES}
+            label={t.source}
+            items={sourceLabels(dict)}
             value={query.source}
             onChange={(source) => set({ source })}
             className="h-11 flex-1 sm:w-48 sm:flex-none"
           />
           <Select
-            label="Sắp xếp"
-            items={SORTS.map(([label]) => label)}
+            label={t.sort}
+            items={sortLabels(dict)}
             value={query.sort}
             onChange={(sort) => set({ sort })}
             className="h-11 flex-1 sm:w-40 sm:flex-none"
@@ -85,11 +89,11 @@ export default function HighlightToolbar({
             type="button"
             onClick={onPlayAll}
             disabled={count === 0}
-            aria-label={`Phát liền mạch ${count} video`}
+            aria-label={format(t.playAria, { count })}
             className="ml-auto inline-flex h-11 items-center gap-2 bg-linear-to-r from-accent to-garnet px-4 font-mono text-[11px] font-bold tracking-[0.12em] text-white uppercase transition-opacity hover:opacity-85 disabled:opacity-40"
           >
             <Play className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Phát liền mạch · </span>
+            <span className="hidden sm:inline">{t.playFilm} · </span>
             {count}
           </button>
         </div>
@@ -97,7 +101,7 @@ export default function HighlightToolbar({
 
       <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-2.5 md:px-10">
         <p className="hud-label text-faint" aria-live="polite">
-          {count === total ? `${total} video` : `${count} / ${total} video`}
+          {count === total ? format(t.count, { count: total }) : format(t.countOf, { count, total })}
         </p>
         {filtered && (
           <button
@@ -105,7 +109,7 @@ export default function HighlightToolbar({
             onClick={() => onQuery({ ...EMPTY_QUERY, sort: query.sort })}
             className="hud-label text-garnet-ink hover:underline"
           >
-            Xoá bộ lọc
+            {dict.common.clearFilters}
           </button>
         )}
       </div>

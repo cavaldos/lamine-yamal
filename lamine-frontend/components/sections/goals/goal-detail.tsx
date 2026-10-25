@@ -2,16 +2,21 @@ import Link from "next/link";
 import { ArrowUpRight, Play } from "@/components/ui/icons";
 import MorphText from "@/components/ui/morph-text";
 import { playGoal } from "@/components/sections/goals/play-goal";
-import { BODY_VI, fmtDate, TYPE_VI, type Goal } from "@/lib/goals";
+import { bodyLabel, competitionLabel, fmtDate, typeLabel, type Goal } from "@/lib/goals";
+import { format, localePath } from "@/lib/i18n/config";
+import { useDict, useLocale } from "@/lib/i18n/provider";
 
 // Everything about one goal, plus ways to watch it: in place, or in the
 // /goals feed. Goals without their own clip yet play a demo.
 export default function GoalDetail({ goal }: { goal: Goal }) {
+  const dict = useDict();
+  const locale = useLocale();
+  const t = dict.goals;
   const facts: [string, string][] = [
-    ["Chân", goal.body ? (BODY_VI[goal.body] ?? goal.body) : "—"],
-    ["Tình huống", TYPE_VI[goal.type] ?? goal.type],
+    [t.foot, bodyLabel(goal, dict) ?? "—"],
+    [t.situation, typeLabel(goal, dict)],
     ["xG", goal.shot ? goal.shot.xg.toFixed(2) : "—"],
-    ["Cự ly", goal.shot ? `${goal.shot.distance}m` : "—"],
+    [t.distance, goal.shot ? `${goal.shot.distance}m` : "—"],
   ];
 
   return (
@@ -20,7 +25,9 @@ export default function GoalDetail({ goal }: { goal: Goal }) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="hud-label text-garnet-ink">
-            <MorphText value={`Bàn #${goal.n} · ${fmtDate(goal.date)} · ${goal.competition}`} />
+            <MorphText
+              value={`${format(t.goalNo, { n: goal.n })} · ${fmtDate(goal.date)} · ${competitionLabel(goal.competition, dict)}`}
+            />
           </p>
           <h3 className="mt-2 font-display text-3xl font-medium tracking-[-0.03em] text-ink-strong">
             <MorphText value={`${goal.home ? "vs" : "@"} ${goal.opponent}`} />
@@ -45,7 +52,7 @@ export default function GoalDetail({ goal }: { goal: Goal }) {
         ))}
       </dl>
       <p className="mt-4 text-sm text-muted">
-        Kiến tạo:{" "}
+        {t.assistLabel}{" "}
         <span className="inline-block align-bottom text-ink">
           <MorphText value={goal.assist ?? "—"} />
         </span>
@@ -54,16 +61,16 @@ export default function GoalDetail({ goal }: { goal: Goal }) {
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={() => playGoal(goal)}
+          onClick={() => playGoal(goal, dict)}
           className="inline-flex h-10 items-center gap-2 bg-invert-bg px-4 font-mono text-[11px] font-bold tracking-[0.12em] text-invert-fg uppercase transition-opacity hover:opacity-80"
         >
-          <Play className="h-3.5 w-3.5" /> Xem bàn thắng
+          <Play className="h-3.5 w-3.5" /> {t.watchGoal}
         </button>
         <Link
-          href={`/goals#goal-${goal.n}`}
+          href={`${localePath(locale, "/goals")}#goal-${goal.n}`}
           className="invert-block inline-flex h-10 items-center gap-2 border border-line-strong px-4 font-mono text-[11px] font-bold tracking-[0.12em] text-ink uppercase hover:border-transparent"
         >
-          Mở trong kho video <ArrowUpRight className="h-3.5 w-3.5" />
+          {t.openInLibrary} <ArrowUpRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </article>

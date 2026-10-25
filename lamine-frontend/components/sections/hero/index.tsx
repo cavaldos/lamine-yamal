@@ -3,10 +3,12 @@ import HeroStats from "@/components/sections/hero/hero-stats";
 import Wordmark from "@/components/sections/hero/wordmark";
 import PauseOffscreen from "@/components/ui/pause-offscreen";
 import { HERO_IMAGES } from "@/lib/content";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ctaGhost, ctaPrimary } from "@/lib/styles";
 
 // Full-screen opener: photo spiral (WebGL) behind the title, intro copy, CTAs, stats.
-export default function HeroSection() {
+export default async function HeroSection() {
+  const { hero } = await getDictionary();
   return (
     <section id="hero" className="relative">
       <div className="relative flex min-h-[calc(100svh-3rem)] flex-col overflow-hidden">
@@ -27,7 +29,7 @@ export default function HeroSection() {
             />
 
             <p data-intro="true" style={{ animationDelay: "0ms" }} className="hud-label relative mb-6 text-muted">
-              FC Barcelona <span className="mx-2 text-garnet-ink">·</span> Tây Ban Nha
+              FC Barcelona <span className="mx-2 text-garnet-ink">·</span> {hero.country}
               <span className="mx-2 text-garnet-ink">·</span> Nº 10
             </p>
 
@@ -44,10 +46,10 @@ export default function HeroSection() {
               className="pointer-events-auto relative mt-10 flex flex-wrap items-center justify-center gap-3"
             >
               <a href="#goals" className={ctaPrimary}>
-                Xem bàn thắng
+                {hero.seeGoals}
               </a>
               <a href="#journey" className={ctaGhost}>
-                Hành trình
+                {hero.journey}
               </a>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { lockScroll } from "@/components/layout/smooth-scroll";
 import { X } from "@/components/ui/icons";
+import { useDict } from "@/lib/i18n/provider";
 
 // `vertical` for Shorts (9:16); `start` / `end` trim the clip, in seconds.
 export type LightboxVideo = {
@@ -20,6 +21,7 @@ let show: ((v: LightboxVideo) => void) | null = null;
 export const openVideo = (v: LightboxVideo) => show?.(v);
 
 export default function VideoLightbox() {
+  const { lightbox } = useDict();
   const dialog = useRef<HTMLDialogElement>(null);
   const [video, setVideo] = useState<LightboxVideo | null>(null);
 
@@ -53,7 +55,7 @@ export default function VideoLightbox() {
   return (
     <dialog
       ref={dialog}
-      aria-label={video?.title ?? "Video"}
+      aria-label={video?.title ?? lightbox.video}
       data-lenis-prevent
       // Clicking the backdrop (the dialog box itself, outside the frame) closes it.
       onClick={(e) => {
@@ -73,7 +75,7 @@ export default function VideoLightbox() {
             type="button"
             autoFocus
             onClick={() => dialog.current?.close()}
-            aria-label="Đóng video"
+            aria-label={lightbox.close}
             className="invert-block -mr-2 flex h-8 w-8 shrink-0 items-center justify-center text-muted"
           >
             <X className="h-4 w-4" />

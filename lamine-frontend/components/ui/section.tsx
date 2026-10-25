@@ -1,17 +1,19 @@
+import { SectionHeader } from "@/components/ui/section-header";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { sectionMeta, type SectionId } from "@/lib/sections";
 
 // The framed column every content section sits in: a hairline that draws in,
 // corner ticks, and a sticky "01 / <section name>" header.
 // Pass `id` to get the anchor and header from lib/sections.ts; leave it out for
 // a continuation block that should not get its own header.
-export default function Section({
+export default async function Section({
   id,
   children,
 }: {
   id?: SectionId;
   children: React.ReactNode;
 }) {
-  const meta = id ? sectionMeta(id) : null;
+  const meta = id ? sectionMeta(await getDictionary(), id) : null;
   return (
     <section id={id} data-choreo="true" className="relative">
       <span aria-hidden data-draw-rule="true" className="absolute inset-x-0 top-0 h-px origin-left bg-line" />
@@ -22,23 +24,6 @@ export default function Section({
         {children}
       </div>
     </section>
-  );
-}
-
-export function SectionHeader({ num, label, hint }: { num: string; label: string; hint?: string }) {
-  return (
-    <div className="sticky top-12 z-30 border-y border-line bg-bg/92">
-      <div className="flex items-center justify-between gap-4 px-6 py-3 md:px-10">
-        <p className="hud-label text-muted">
-          <span className="text-faint">{num}</span>
-          <span aria-hidden className="mx-2 text-faint">
-            /
-          </span>
-          {label}
-        </p>
-        {hint && <p className="hud-label hidden text-faint sm:block">{hint}</p>}
-      </div>
-    </div>
   );
 }
 

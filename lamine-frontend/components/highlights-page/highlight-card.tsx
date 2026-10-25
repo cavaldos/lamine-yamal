@@ -2,10 +2,14 @@
 
 import HoverPreview, { useHoverPreview } from "@/components/ui/hover-preview";
 import { Play } from "@/components/ui/icons";
-import type { Video } from "@/lib/content";
+import { videoTitle, type Video } from "@/lib/content";
+import { format } from "@/lib/i18n/config";
+import { useDict } from "@/lib/i18n/provider";
 
 // One video in the grid. Hovering plays it muted in place; clicking opens the player.
 export default function HighlightCard({ video, n, onOpen }: { video: Video; n: number; onOpen: () => void }) {
+  const dict = useDict();
+  const title = videoTitle(video, dict);
   const { active, handlers } = useHoverPreview();
 
   return (
@@ -13,7 +17,7 @@ export default function HighlightCard({ video, n, onOpen }: { video: Video; n: n
       type="button"
       onClick={onOpen}
       {...handlers}
-      aria-label={`Xem ${video.title}`}
+      aria-label={format(dict.highlightsPage.watchAria, { title })}
       className="glow-card group flex h-full w-full flex-col bg-bg text-left outline outline-line focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-accent"
     >
       <div className="flex w-full items-center justify-between gap-4 border-b border-line px-5 py-2.5">
@@ -43,7 +47,7 @@ export default function HighlightCard({ video, n, onOpen }: { video: Video; n: n
         )}
       </div>
       <div className="flex-1 px-5 py-5">
-        <h3 className="font-display text-lg font-medium tracking-[-0.02em] text-ink-strong">{video.title}</h3>
+        <h3 className="font-display text-lg font-medium tracking-[-0.02em] text-ink-strong">{title}</h3>
       </div>
     </button>
   );
