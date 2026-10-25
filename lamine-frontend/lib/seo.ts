@@ -5,6 +5,20 @@ export const SITE_URL = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://loca
 export const SITE_NAME = "Lamine Yamal";
 export const OG_IMAGE_PATH = "/journey/2024-euro-champion.webp";
 
+export const LOCALE_LANGUAGE_TAGS: Record<Locale, string> = {
+  en: "en-US",
+  vi: "vi-VN",
+  fr: "fr-FR",
+  es: "es-ES",
+};
+
+const OG_LOCALES: Record<Locale, string> = {
+  en: "en_US",
+  vi: "vi_VN",
+  fr: "fr_FR",
+  es: "es_ES",
+};
+
 export function createPageMetadata(locale: Locale, title: string, description: string, path = ""): Metadata {
   const url = new URL(localePath(locale, path), SITE_URL);
   const localeAlternates = Object.fromEntries(
@@ -29,7 +43,7 @@ export function createPageMetadata(locale: Locale, title: string, description: s
     openGraph: {
       type: "website",
       siteName: SITE_NAME,
-      locale,
+      locale: OG_LOCALES[locale],
       url,
       title,
       description,

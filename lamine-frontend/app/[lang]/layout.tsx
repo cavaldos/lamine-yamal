@@ -9,7 +9,7 @@ import VideoLightbox from "@/components/ui/video-lightbox";
 import { hasLocale, localePath, LOCALES } from "@/lib/i18n/config";
 import { getDictionary, getLocale, loadDictionary } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/lib/i18n/provider";
-import { createPageMetadata, SITE_URL } from "@/lib/seo";
+import { createPageMetadata, LOCALE_LANGUAGE_TAGS, SITE_URL } from "@/lib/seo";
 import "../globals.css";
 
 // The wide display cut needs the width axis. Every face ships the Vietnamese subset; Latin covers French and Spanish.
@@ -79,7 +79,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
                     url: SITE_URL.toString(),
                     name: "Lamine Yamal",
                     description: dict.meta.description,
-                    inLanguage: locale,
+                    inLanguage: LOCALE_LANGUAGE_TAGS[locale],
                     about: { "@id": `${new URL(localePath(locale), SITE_URL).toString()}#person` },
                   },
                 ],
