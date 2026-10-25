@@ -4,6 +4,9 @@
 
 export const en = {
   meta: {
+    ogImageAlt: "Lamine Yamal celebrating Spain's UEFA EURO 2024 title",
+    keywords: ["Lamine Yamal", "Lamine Yamal goals", "Lamine Yamal highlights", "FC Barcelona", "Spain national team", "La Masia", "Barça number 10"],
+    crumbs: { goals: "Goals", highlights: "Highlights", archive: "Archive" },
     title: "Lamine Yamal — From Rocafonda to the top of the world",
     description:
       "Trophies, goals, highlights and childhood archive of Lamine Yamal, FC Barcelona's number 10.",

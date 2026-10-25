@@ -2,6 +2,9 @@ import type { Dictionary } from "./en";
 
 export const vi: Dictionary = {
   meta: {
+    ogImageAlt: "Lamine Yamal ăn mừng chức vô địch UEFA EURO 2024 cùng Tây Ban Nha",
+    keywords: ["Lamine Yamal", "bàn thắng Lamine Yamal", "highlight Lamine Yamal", "Yamal", "FC Barcelona", "Barca", "tuyển Tây Ban Nha", "La Masia"],
+    crumbs: { goals: "Bàn thắng", highlights: "Highlight", archive: "Tư liệu" },
     title: "Lamine Yamal — Từ Rocafonda tới đỉnh thế giới",
     description: "Danh hiệu, bàn thắng, highlight và tư liệu tuổi thơ của Lamine Yamal, số 10 của FC Barcelona.",
     goalsTitle: "Bàn thắng — Lamine Yamal",

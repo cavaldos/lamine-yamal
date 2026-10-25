@@ -1,15 +1,17 @@
 import type { MetadataRoute } from "next";
-import { LOCALES, localePath } from "@/lib/i18n/config";
-import { SITE_URL } from "@/lib/seo";
+import { LOCALES } from "@/lib/i18n/config";
+import { languageAlternates, OG_IMAGE_PATH, PAGES, pageUrl, SITE_URL } from "@/lib/seo";
 
-const routes = ["", "/goals", "/highlights", "/archive"];
-
+// One entry per page per language. Each lists its other languages (hreflang), so search
+// engines show every visitor the version in their own language.
 export default function sitemap(): MetadataRoute.Sitemap {
   return LOCALES.flatMap((locale) =>
-    routes.map((route) => ({
-      url: new URL(localePath(locale, route), SITE_URL).toString(),
-      changeFrequency: route === "" ? "weekly" : "monthly",
-      priority: route === "" ? 1 : 0.8,
+    Object.values(PAGES).map(({ path }) => ({
+      url: pageUrl(locale, path),
+      changeFrequency: path === "" ? "weekly" : "monthly",
+      priority: path === "" ? 1 : 0.8,
+      alternates: { languages: languageAlternates(path) },
+      ...(path === "" && { images: [new URL(OG_IMAGE_PATH, SITE_URL).toString()] }),
     })),
   );
 }

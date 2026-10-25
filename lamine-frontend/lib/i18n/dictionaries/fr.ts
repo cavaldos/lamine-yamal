@@ -2,6 +2,9 @@ import type { Dictionary } from "./en";
 
 export const fr: Dictionary = {
   meta: {
+    ogImageAlt: "Lamine Yamal fête le titre de l'Espagne à l'UEFA EURO 2024",
+    keywords: ["Lamine Yamal", "buts Lamine Yamal", "résumé Lamine Yamal", "FC Barcelone", "équipe d'Espagne", "La Masia", "numéro 10 du Barça"],
+    crumbs: { goals: "Buts", highlights: "Résumés", archive: "Archives" },
     title: "Lamine Yamal — De Rocafonda au sommet du monde",
     description:
       "Trophées, buts, résumés et archives d'enfance de Lamine Yamal, le numéro 10 du FC Barcelone.",

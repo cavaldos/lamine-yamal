@@ -1,4 +1,5 @@
-// The site's languages. English is the default: it is where `/` sends a first-time visitor.
+// The site's languages. English is the default: a first-time visitor whose country has no
+// language here (see ./geo.ts) gets it.
 // To add a language: add its code here, a dictionary in ./dictionaries/<code>.ts, and an
 // entry in ./get-dictionary.ts.
 

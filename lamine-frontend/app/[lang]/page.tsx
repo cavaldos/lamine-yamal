@@ -1,4 +1,5 @@
 import Ruler from "@/components/layout/ruler";
+import JsonLd from "@/components/seo/json-ld";
 import ArchiveSection from "@/components/sections/archive";
 import Closing from "@/components/sections/closing";
 import GoalsSection from "@/components/sections/goals";
@@ -17,6 +18,7 @@ export default function Home() {
     <>
       <Ruler />
       <main id="main">
+        <JsonLd page="home" />
         <HeroSection />
         <Marquee />
         <TrophiesSection />

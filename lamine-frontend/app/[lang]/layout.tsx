@@ -6,10 +6,11 @@ import SiteFooter from "@/components/layout/site-footer";
 import SmoothScroll from "@/components/layout/smooth-scroll";
 import SiteNav from "@/components/layout/site-nav";
 import VideoLightbox from "@/components/ui/video-lightbox";
-import { hasLocale, localePath, LOCALES } from "@/lib/i18n/config";
-import { getDictionary, getLocale, loadDictionary } from "@/lib/i18n/get-dictionary";
+import JsonLd from "@/components/seo/json-ld";
+import { hasLocale, LOCALES } from "@/lib/i18n/config";
+import { getDictionary, getLocale } from "@/lib/i18n/get-dictionary";
 import { I18nProvider } from "@/lib/i18n/provider";
-import { createPageMetadata, LOCALE_LANGUAGE_TAGS, SITE_URL } from "@/lib/seo";
+import { createPageMetadata } from "@/lib/seo";
 import "../globals.css";
 
 // The wide display cut needs the width axis. Every face ships the Vietnamese subset; Latin covers French and Spanish.
@@ -30,8 +31,7 @@ export const generateStaticParams = () => LOCALES.map((lang) => ({ lang }));
 export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Promise<Metadata> {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const { meta } = await loadDictionary(lang);
-  return createPageMetadata(lang, meta.title, meta.description);
+  return createPageMetadata(lang, "home");
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
@@ -49,43 +49,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
             client (switching language is a full page load), so React never sees it there. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <I18nProvider locale={locale} dict={dict}>
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@graph": [
-                  {
-                    "@type": "Person",
-                    "@id": `${new URL(localePath(locale), SITE_URL).toString()}#person`,
-                    name: "Lamine Yamal",
-                    givenName: "Lamine",
-                    familyName: "Yamal Nasraoui Ebana",
-                    birthDate: "2007-07-13",
-                    birthPlace: {
-                      "@type": "Place",
-                      name: "Esplugues de Llobregat, Catalonia",
-                    },
-                    jobTitle: "Professional footballer",
-                    nationality: "Spanish",
-                    memberOf: [
-                      { "@type": "SportsTeam", name: "FC Barcelona" },
-                      { "@type": "SportsTeam", name: "Spain national football team" },
-                    ],
-                  },
-                  {
-                    "@type": "WebSite",
-                    "@id": `${SITE_URL.toString()}#website`,
-                    url: SITE_URL.toString(),
-                    name: "Lamine Yamal",
-                    description: dict.meta.description,
-                    inLanguage: LOCALE_LANGUAGE_TAGS[locale],
-                    about: { "@id": `${new URL(localePath(locale), SITE_URL).toString()}#person` },
-                  },
-                ],
-              }),
-            }}
-          />
+          <JsonLd />
           <SiteNav />
           <SmoothScroll />
           <GoalsSync />
