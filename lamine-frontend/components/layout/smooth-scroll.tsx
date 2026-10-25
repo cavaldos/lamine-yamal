@@ -2,6 +2,7 @@
 
 import Lenis from "lenis";
 import { useEffect } from "react";
+import { attachScrollMagnet } from "@/components/layout/scroll-magnet";
 
 let instance: Lenis | null = null;
 
@@ -55,9 +56,11 @@ export default function SmoothScroll() {
     instance = lenis;
     // Fires for wheel/touch smoothing and for native scrolls (keyboard, scrollbar).
     const off = lenis.on("scroll", (l: Lenis) => notify(l.animatedScroll));
+    const offMagnet = attachScrollMagnet(lenis, NAV_H);
 
     return () => {
       off();
+      offMagnet();
       instance = null;
       lenis.destroy();
     };
