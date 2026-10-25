@@ -3,20 +3,21 @@ import RAW from "@/data/lamine_yamal_goals_assists.json";
 import { DEMO_VIDEOS, DEMO_POOL } from "@/lib/demo-videos";
 import { format } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { minuteValue, type RawGoal } from "@/lib/notion/goal-schema";
 
-// Goal data. The source of truth is data/lamine_yamal_goals_assists.json (every
-// goal, all competitions). data/goals.json holds shot positions and xG for the
-// La Liga goals only; they are matched by date and minute, so goals from other
-// competitions simply have no dot on the shot map.
+// Goal data. The goals come from the Notion database (via /api/goals, cached in
+// localStorage by lib/goals-store.ts); data/lamine_yamal_goals_assists.json is the
+// bundled copy shown until then, and the source `npm run notion:sync` uploads.
+// data/goals.json holds shot positions and xG for the La Liga goals only; they are
+// matched by date and minute, so goals from other competitions simply have no dot
+// on the shot map.
 //
-// Adding a goal's clip: add `"youtube"` to that goal in
-// data/lamine_yamal_goals_assists.json (any YouTube link or id).
+// Adding a goal's clip: fill its YouTube column in Notion (or add `"youtube"` to that
+// goal in data/lamine_yamal_goals_assists.json). Any YouTube link or id works.
 //   "youtube": "https://www.youtube.com/shorts/bqgKhGNMXNo"   → plays vertical (9:16)
 //   "youtube": "https://www.youtube.com/watch?v=AfpItQBKl04&t=95" → 16:9, starts at 1:35
 // Optional "start" / "end" (seconds) trim a long video down to the goal, so the
-// back-to-back mode moves on as soon as the goal is over.
-
-type RawGoal = (typeof RAW.goals)[number] & { youtube?: string | null; start?: number; end?: number };
+// back-to-back mode moves on as soon as the goal is over (Notion: Clip Start / Clip End).
 
 export type Shot = { x: number; y: number; xg: number; distance: number; legacyN: number };
 
@@ -51,12 +52,6 @@ const COMPETITIONS: Record<string, string> = {
   "UEFA European Championship": "Euro",
   "FIFA World Cup": "World Cup",
   "Trofeo Joan Gamper": "Joan Gamper",
-};
-
-// "45'+2'" → 47, so minutes can be compared across sources.
-const minuteValue = (m: string) => {
-  const a = m.match(/(\d+)'(?:\+(\d+)')?/);
-  return a ? Number(a[1]) + Number(a[2] ?? 0) : 0;
 };
 
 // The season a date belongs to: August onwards starts the next one.
@@ -110,10 +105,16 @@ function parseGoal(r: RawGoal, n: number): Goal {
   };
 }
 
-export const ALL_GOALS: Goal[] = (RAW.goals as RawGoal[])
-  .slice()
-  .sort((a, b) => a.date.localeCompare(b.date) || minuteValue(a.minute) - minuteValue(b.minute))
-  .map((r, i) => parseGoal(r, i + 1));
+// Raw goals (from Notion or the JSON) → app goals, numbered in date order.
+export const buildGoals = (raw: RawGoal[]): Goal[] =>
+  raw
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date) || minuteValue(a.minute) - minuteValue(b.minute))
+    .map((r, i) => parseGoal(r, i + 1));
+
+// The copy shipped with the site: what the server renders, and the fallback when
+// Notion can't be reached. Components read the live list with useGoals().
+export const BUNDLED_GOALS: Goal[] = buildGoals(RAW.goals as RawGoal[]);
 
 export type GoalVideo = {
   id: string;
@@ -179,13 +180,14 @@ export const goalTitle = (g: Goal) => `${g.home ? "vs" : "@"} ${g.opponent}`;
 
 // Value of the "everything" option in every filter. Its label is dict.common.all.
 export const ALL = "all";
-export const SEASONS = [ALL, ...Array.from(new Set(ALL_GOALS.map((g) => g.season)))];
+// Season filter values, oldest first (goals are in date order).
+export const seasonsOf = (goals: Goal[]) => [ALL, ...Array.from(new Set(goals.map((g) => g.season)))];
 // Competitions in order of how many goals were scored in them.
-export const COMPETITION_LIST = (() => {
+export const competitionsOf = (goals: Goal[]) => {
   const count = new Map<string, number>();
-  ALL_GOALS.forEach((g) => count.set(g.competition, (count.get(g.competition) ?? 0) + 1));
+  goals.forEach((g) => count.set(g.competition, (count.get(g.competition) ?? 0) + 1));
   return [ALL, ...[...count.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name)];
-})();
+};
 
 // The filters below are [id, test] pairs; the id picks the label in dict.goals, so the
 // buttons read in the page's language. The first entry of each one means "everything".
@@ -238,10 +240,11 @@ export const areaLabels = (d: Dictionary) => AREAS.map(named(d, d.goals.areas));
 export const venueLabels = (d: Dictionary) => VENUES.map(named(d, d.goals.venues));
 export const teamLabels = (d: Dictionary) => TEAMS.map(named(d, d.goals.teams));
 export const sortLabels = (d: Dictionary) => SORTS.map(named(d, d.goals.sorts));
-export const seasonLabels = (d: Dictionary) => SEASONS.map((s) => (s === ALL ? d.common.all : shortSeason(s)));
+export const seasonLabels = (d: Dictionary, seasons: string[]) =>
+  seasons.map((s) => (s === ALL ? d.common.all : shortSeason(s)));
 export const competitionLabel = (name: string, d: Dictionary) => d.goals.competitions[name] ?? name;
-export const competitionLabels = (d: Dictionary) =>
-  COMPETITION_LIST.map((c) => (c === ALL ? d.common.all : competitionLabel(c, d)));
+export const competitionLabels = (d: Dictionary, competitions: string[]) =>
+  competitions.map((c) => (c === ALL ? d.common.all : competitionLabel(c, d)));
 
 export const bodyLabel = (g: Goal, d: Dictionary) => (g.body ? (d.goals.body[g.body] ?? g.body) : undefined);
 export const typeLabel = (g: Goal, d: Dictionary) => d.goals.type[g.type] ?? g.type;
@@ -285,50 +288,49 @@ export function goalStats(goals: Goal[]) {
 export const fold = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "d").toLowerCase();
 
-// Everything a visitor might type to find a goal, in the page's language. Built once per dictionary.
-const haystacks = new WeakMap<Dictionary, Map<string, string>>();
+// Everything a visitor might type to find a goal, in the page's language.
+// Built once per goal and dictionary.
+const haystacks = new WeakMap<Dictionary, WeakMap<Goal, string>>();
 
-function haystackFor(d: Dictionary) {
+function haystackOf(g: Goal, d: Dictionary) {
   let map = haystacks.get(d);
-  if (!map) {
+  if (!map) haystacks.set(d, (map = new WeakMap()));
+  let hay = map.get(g);
+  if (hay === undefined) {
     const h = d.goals.haystack;
-    map = new Map(
-      ALL_GOALS.map((g) => [
-        g.id,
-        fold(
-          [
-            g.opponent,
-            g.score,
-            g.assist ?? h.noAssist,
-            g.competition,
-            competitionLabel(g.competition, d),
-            g.team,
-            d.goals.teams[g.team] ?? g.team,
-            g.season,
-            shortSeason(g.season),
-            g.date,
-            fmtDate(g.date),
-            g.minute,
-            format(h.minute, { n: parseInt(g.minute) }),
-            `#${g.n}`,
-            format(h.goal, { n: g.n }),
-            bodyLabel(g, d) ?? "",
-            typeLabel(g, d),
-            g.home ? h.home : h.away,
-            g.area ? d.goals.areas[g.area] : "",
-          ].join(" · "),
-        ),
-      ]),
+    hay = fold(
+      [
+        g.opponent,
+        g.score,
+        g.assist ?? h.noAssist,
+        g.competition,
+        competitionLabel(g.competition, d),
+        g.team,
+        d.goals.teams[g.team] ?? g.team,
+        g.season,
+        shortSeason(g.season),
+        g.date,
+        fmtDate(g.date),
+        g.minute,
+        format(h.minute, { n: parseInt(g.minute) }),
+        `#${g.n}`,
+        format(h.goal, { n: g.n }),
+        bodyLabel(g, d) ?? "",
+        typeLabel(g, d),
+        g.home ? h.home : h.away,
+        g.area ? d.goals.areas[g.area] : "",
+      ].join(" · "),
     );
-    haystacks.set(d, map);
+    map.set(g, hay);
   }
-  return map;
+  return hay;
 }
 
 // Every word has to appear somewhere: "real 2024" finds the Clásico goal of 2024.
 export function matches(g: Goal, query: string, d: Dictionary) {
   const words = fold(query).split(/\s+/).filter(Boolean);
-  const hay = haystackFor(d).get(g.id) ?? "";
+  if (!words.length) return true;
+  const hay = haystackOf(g, d);
   return words.every((w) => hay.includes(w));
 }
 
@@ -345,8 +347,8 @@ export type GoalQuery = {
 
 export const EMPTY_QUERY: GoalQuery = { q: "", season: ALL, comp: ALL, team: 0, kind: 0, area: 0, venue: 0, sort: 0 };
 
-export function queryGoals(f: GoalQuery, d: Dictionary) {
-  return ALL_GOALS.filter(
+export function queryGoals(goals: Goal[], f: GoalQuery, d: Dictionary) {
+  return goals.filter(
     (g) =>
       (f.season === ALL || g.season === f.season) &&
       (f.comp === ALL || g.competition === f.comp) &&

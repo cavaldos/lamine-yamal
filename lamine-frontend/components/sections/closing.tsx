@@ -1,7 +1,8 @@
 import { MARK_PATH, MARK_VIEWBOX } from "@/components/layout/brand";
 import Section from "@/components/ui/section";
+import WarpText from "@/components/ui/warp-text";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { ctaGhost, ctaPrimary, serif } from "@/lib/styles";
+import { ctaGhost, ctaPrimary } from "@/lib/styles";
 
 // Sign-off after the journey: the outlined monogram and two ways onward.
 export default async function Closing() {
@@ -18,14 +19,21 @@ export default async function Closing() {
           <path d={MARK_PATH} fill="none" stroke="var(--line)" strokeWidth="0.6" />
         </svg>
         <p className="hud-label relative text-faint">{closing.eyebrow}</p>
-        <h2
-          data-reveal="true"
-          className="relative mt-6 max-w-4xl font-display text-5xl font-medium tracking-[-0.04em] text-ink-strong sm:text-6xl md:text-7xl"
-        >
-          {before}
-          <span className={`${serif} text-blaugrana`}>{accent}</span>
-          {after}
-        </h2>
+        {/* The title is drawn on a canvas, so the heading is kept for screen readers. */}
+        <h2 className="sr-only">{closing.title.join("")}</h2>
+        <div data-reveal="true" className="relative mt-6 w-full max-w-4xl text-ink-strong">
+          <WarpText
+            text={`${before}${accent}\n${after.trim()}`}
+            fontFamily="var(--font-archivo), system-ui, sans-serif"
+            fontSize="clamp(2.75rem, 9vw, 6.5rem)"
+            fontWeight={700}
+            letterSpacing="-0.04em"
+            lineHeight={1}
+            lens="swirl"
+            chromatic={0.35}
+            className="h-[260px] md:h-[340px]"
+          />
+        </div>
         <div className="relative mt-10 flex flex-wrap items-center justify-center gap-3">
           <a href="#highlights" className={ctaPrimary}>
             {closing.seeHighlights}

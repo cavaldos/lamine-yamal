@@ -1,14 +1,33 @@
+import DepthText from "@/components/ui/depth-text";
 import { PLAYER } from "@/lib/content";
 
 const LINES = ["LAMINE", "YAMAL"];
 
-const glowText =
-  "0 0 0.6vw color-mix(in srgb, var(--bg) 92%, transparent), 0 0.25vw 2.4vw color-mix(in srgb, var(--bg) 78%, transparent), 0 0.4vw 5vw color-mix(in srgb, var(--bg) 55%, transparent)";
+// Line one is white ink; line two is the blaugrana sweep. The extrusion behind
+// each is a darker blend of the same colours, so it reads as solid type.
+const LINE_STYLE = [
+  {
+    faceColor: "var(--ink-strong)",
+    depthColor: "color-mix(in srgb, var(--accent) 38%, var(--bg))",
+    faceStyle: undefined,
+  },
+  {
+    faceColor: "var(--garnet)",
+    depthColor: "color-mix(in srgb, var(--accent) 55%, black)",
+    // Background-clipped text: the shadow would show through the transparent fill.
+    faceStyle: {
+      backgroundImage: "linear-gradient(100deg, var(--accent) 0%, var(--garnet) 60%, var(--gold) 100%)",
+      WebkitBackgroundClip: "text",
+      backgroundClip: "text",
+      color: "transparent",
+      textShadow: "none",
+    },
+  },
+] as const;
 
-// Two-line title; each letter rises in on load with a short stagger.
+// Two-line title in layered 3D type that tilts toward the pointer; each line rises in on load.
 // Must sit inside a `container-type: inline-size` box: it sizes itself in cqw.
 export default function Wordmark() {
-  let k = 0;
   return (
     <div
       role="img"
@@ -16,36 +35,23 @@ export default function Wordmark() {
       className="relative text-ink-strong"
       style={{
         fontFamily: "var(--font-archivo), system-ui, sans-serif",
-        fontWeight: 800,
         fontStretch: "125%",
-        // Sized so "LAMINE" fills the column.
-        fontSize: "17.2cqw",
-        whiteSpace: "nowrap",
         lineHeight: 0.86,
-        letterSpacing: "-0.02em",
       }}
     >
       {LINES.map((line, li) => (
-        <div key={line}>
-          {line.split("").map((char, ci, all) => (
-            <span
-              key={k}
-              aria-hidden
-              // Each letter animates on its own layer, so the blaugrana gradient is
-              // painted per letter and offset to read as one continuous sweep.
-              className={`wm-letter inline-block ${li === 1 ? "text-blaugrana-letter" : ""}`}
-              style={{
-                animationDelay: `${40 + k++ * 50}ms`,
-                textShadow: li === 0 ? glowText : undefined,
-                ...(li === 1 && {
-                  backgroundSize: `${all.length * 100}% 100%`,
-                  backgroundPosition: `${(ci / (all.length - 1)) * 100}% 0`,
-                }),
-              }}
-            >
-              {char}
-            </span>
-          ))}
+        <div key={line} aria-hidden className="wm-letter" style={{ animationDelay: `${40 + li * 260}ms` }}>
+          <DepthText
+            text={line}
+            // Sized so "LAMINE" fills the column.
+            fontSize="17.2cqw"
+            fontWeight={800}
+            letterSpacing="-0.02em"
+            layers={30}
+            depth={2}
+            tilt={9}
+            {...LINE_STYLE[li]}
+          />
         </div>
       ))}
     </div>

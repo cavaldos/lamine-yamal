@@ -1,23 +1,24 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import FilterChips from "@/components/ui/filter-chips";
 import { ChevronDown, Film, Play, Search, Swipe, X } from "@/components/ui/icons";
 import Select from "@/components/ui/select";
 import {
   ALL,
   areaLabels,
-  COMPETITION_LIST,
   competitionLabels,
+  competitionsOf,
   EMPTY_QUERY,
   kindLabels,
   seasonLabels,
-  SEASONS,
+  seasonsOf,
   sortLabels,
   teamLabels,
   venueLabels,
   type GoalQuery,
 } from "@/lib/goals";
+import { useGoals } from "@/lib/goals-store";
 import { format } from "@/lib/i18n/config";
 import { useDict } from "@/lib/i18n/provider";
 
@@ -44,6 +45,9 @@ export default function GoalToolbar({
 }) {
   const dict = useDict();
   const t = dict.goalsPage;
+  const goals = useGoals();
+  const seasons = useMemo(() => seasonsOf(goals), [goals]);
+  const competitions = useMemo(() => competitionsOf(goals), [goals]);
   const modes: [ViewMode, string, typeof Film][] = [
     ["feed", t.modeFeed, Swipe],
     ["film", t.modeFilm, Film],
@@ -104,15 +108,15 @@ export default function GoalToolbar({
     <div className="flex flex-col gap-3">
       <FilterChips
         label={t.filterSeason}
-        items={seasonLabels(dict)}
-        value={SEASONS.indexOf(query.season)}
-        onChange={(i) => set({ season: SEASONS[i] })}
+        items={seasonLabels(dict, seasons)}
+        value={seasons.indexOf(query.season)}
+        onChange={(i) => set({ season: seasons[i] })}
       />
       <FilterChips
         label={t.filterCompetition}
-        items={competitionLabels(dict)}
-        value={COMPETITION_LIST.indexOf(query.comp)}
-        onChange={(i) => set({ comp: COMPETITION_LIST[i] })}
+        items={competitionLabels(dict, competitions)}
+        value={competitions.indexOf(query.comp)}
+        onChange={(i) => set({ comp: competitions[i] })}
       />
       <FilterChips label={t.filterTeam} items={teamLabels(dict)} value={query.team} onChange={(team) => set({ team })} />
       <FilterChips label={t.filterKind} items={kindLabels(dict)} value={query.kind} onChange={(kind) => set({ kind })} />

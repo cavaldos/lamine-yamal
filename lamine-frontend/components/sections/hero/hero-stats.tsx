@@ -1,16 +1,17 @@
 import CountUp from "@/components/ui/count-up";
-import { ALL_GOALS } from "@/lib/goals";
+import GoalCount from "@/components/ui/goal-count";
 import { PLAYER, TEAM_TITLE_COUNT } from "@/lib/content";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 // The row of numbers along the bottom of the hero; they count up after the intro.
 export default async function HeroStats() {
   const { hero } = await getDictionary();
-  const stats: [number | string, string][] = [
+  // null = the goal total, which follows the live list.
+  const stats: [number | string | null, string][] = [
     ["13 · 07 · 2007", hero.born],
     [PLAYER.shirt, hero.shirt],
     [TEAM_TITLE_COUNT, hero.teamTitles],
-    [ALL_GOALS.length, hero.goals],
+    [null, hero.goals],
   ];
   return (
     <dl
@@ -27,6 +28,8 @@ export default async function HeroStats() {
           <dd className="mt-1 font-display text-3xl font-medium tracking-[-0.03em] text-ink-strong">
             {typeof value === "string" ? (
               <span className="whitespace-nowrap text-2xl md:text-3xl">{value}</span>
+            ) : value === null ? (
+              <GoalCount delay={1200 + i * 90} />
             ) : (
               <CountUp to={value} delay={1200 + i * 90} />
             )}

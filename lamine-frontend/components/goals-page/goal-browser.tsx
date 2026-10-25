@@ -6,7 +6,8 @@ import GoalFilm from "@/components/goals-page/goal-film";
 import GoalShotMap from "@/components/goals-page/goal-shot-map";
 import GoalGrid from "@/components/goals-page/goal-grid";
 import GoalToolbar, { type ViewMode } from "@/components/goals-page/goal-toolbar";
-import { ALL_GOALS, EMPTY_QUERY, queryGoals, SORTS, type Goal, type GoalQuery } from "@/lib/goals";
+import { EMPTY_QUERY, queryGoals, SORTS, type Goal, type GoalQuery } from "@/lib/goals";
+import { useGoals } from "@/lib/goals-store";
 import { useDict } from "@/lib/i18n/provider";
 
 // The chosen viewing mode, remembered in localStorage. Read through
@@ -43,20 +44,21 @@ type Open = { mode: ViewMode; goals: Goal[]; index: number } | null;
 // Clicking a card opens the chosen mode at that goal, over the filtered list.
 export default function GoalBrowser() {
   const dict = useDict();
+  const all = useGoals();
   const [query, setQuery] = useState<GoalQuery>(EMPTY_QUERY);
   const mode = useSyncExternalStore(subscribeMode, readMode, () => "feed" as const);
   const [open, setOpen] = useState<Open>(null);
-  const goals = useMemo(() => queryGoals(query, dict), [query, dict]);
+  const goals = useMemo(() => queryGoals(all, query, dict), [all, query, dict]);
 
   // Links like /goals#goal-12 open that goal, once the page has hydrated.
   useEffect(() => {
     const n = Number(window.location.hash.match(/^#goal-(\d+)$/)?.[1]);
-    const all = queryGoals(EMPTY_QUERY, dict);
-    const at = all.findIndex((g) => g.n === n);
+    const list = queryGoals(all, EMPTY_QUERY, dict);
+    const at = list.findIndex((g) => g.n === n);
     // The URL can only be read after hydration, so this state is set from an effect.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (at >= 0) setOpen({ mode: "feed", goals: all, index: at });
-  }, [dict]);
+    if (at >= 0) setOpen({ mode: "feed", goals: list, index: at });
+  }, [all, dict]);
 
   // Next.js keeps this page alive (hidden) after navigating away; close any
   // player then, so coming back shows the grid, not a stale modal.
@@ -73,7 +75,7 @@ export default function GoalBrowser() {
         query={query}
         onQuery={setQuery}
         count={goals.length}
-        total={ALL_GOALS.length}
+        total={all.length}
         mode={mode}
         onMode={saveMode}
         onPlayAll={() => setOpen({ mode, goals, index: 0 })}
