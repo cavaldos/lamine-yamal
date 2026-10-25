@@ -12,7 +12,7 @@ import { ALL, ALL_GOALS, KINDS, SEASONS, shortSeason, type Goal } from "@/lib/go
 
 // The interactive part of the goals section. Owns the filter, the selected goal
 // and the hovered goal; hovering previews a goal, clicking pins it and plays its clip.
-export default function GoalMap() {
+export default function GoalMap({ action }: { action?: React.ReactNode }) {
   const [season, setSeason] = useState(ALL);
   const [kind, setKind] = useState(0);
   const [selected, setSelected] = useState<Goal>(ALL_GOALS[ALL_GOALS.length - 1]);
@@ -32,6 +32,7 @@ export default function GoalMap() {
   return (
     <div className="grid gap-px border-t border-line bg-line lg:grid-cols-[1.05fr_1fr]">
       <div className="relative bg-bg-sunken p-4 md:p-8">
+        {action && <div className="mb-4">{action}</div>}
         <ShotLegend />
         <ShotPitch goals={ALL_GOALS} shown={shown} focus={focus} onHover={setHover} onSelect={pick} />
         <GoalStats goals={visible} />
@@ -47,7 +48,7 @@ export default function GoalMap() {
           />
           <FilterChips label="Kiểu" items={KINDS.map(([k]) => k)} value={kind} onChange={setKind} />
         </div>
-        <GoalDetail key={focus.id} goal={focus} />
+        <GoalDetail goal={focus} />
         <GoalList goals={visible} selectedId={selected.id} onSelect={pick} onHover={setHover} />
       </div>
     </div>

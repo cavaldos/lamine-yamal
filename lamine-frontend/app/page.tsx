@@ -5,7 +5,6 @@ import GoalsSection from "@/components/sections/goals";
 import HeroSection from "@/components/sections/hero";
 import HighlightsSection from "@/components/sections/highlights";
 import JourneySection from "@/components/sections/journey";
-import Manifesto from "@/components/sections/manifesto";
 import Marquee from "@/components/sections/marquee";
 import TrophiesSection from "@/components/sections/trophies";
 
@@ -20,7 +19,6 @@ export default function Home() {
       <main id="main">
         <HeroSection />
         <Marquee />
-        <Manifesto />
         <TrophiesSection />
         <GoalsSection />
         <HighlightsSection />

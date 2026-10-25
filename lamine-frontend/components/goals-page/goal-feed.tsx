@@ -6,7 +6,7 @@ import FeedRail from "@/components/goals-page/feed-rail";
 import GoalFacts from "@/components/goals-page/goal-facts";
 import Poster from "@/components/goals-page/poster";
 import { useGoalPlayer } from "@/components/goals-page/use-goal-player";
-import { ChevronDown, ChevronUp, Pause, X } from "@/components/ui/icons";
+import { ChevronDown, ChevronUp, X } from "@/components/ui/icons";
 import { goalVideo, type Goal } from "@/lib/goals";
 
 // Normal mode: one goal per screen, swipe or scroll to the next, like TikTok.
@@ -36,7 +36,7 @@ export default function GoalFeed({
   const [still, setStill] = useState(false); // feed has settled on `active`
 
   // Destructured: the hook also returns a ref (host), and render may only read plain values.
-  const { host, started, playing, muted, load, play, pause, toggle, restart, seek, setMuted } = useGoalPlayer({
+  const { host, started, muted, load, play, pause, toggle, restart, seek, setMuted } = useGoalPlayer({
     // Loop the clip, like a short-video app.
     onEnded: () => restart(),
     onFrame: (p) => {
@@ -194,11 +194,6 @@ export default function GoalFeed({
 
                   {i === active && still && !started && (
                     <span className="absolute top-1/2 left-1/2 z-20 h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-spin rounded-full border-2 border-white/25 border-t-white" />
-                  )}
-                  {i === active && started && !playing && (
-                    <span className="pointer-events-none absolute top-1/2 left-1/2 z-20 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50">
-                      <Pause className="h-6 w-6" />
-                    </span>
                   )}
 
                   {v.vertical && (

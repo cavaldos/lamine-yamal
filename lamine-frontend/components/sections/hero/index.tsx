@@ -3,7 +3,7 @@ import HeroStats from "@/components/sections/hero/hero-stats";
 import Wordmark from "@/components/sections/hero/wordmark";
 import PauseOffscreen from "@/components/ui/pause-offscreen";
 import { HERO_IMAGES } from "@/lib/content";
-import { ctaGhost, ctaPrimary, serif } from "@/lib/styles";
+import { ctaGhost, ctaPrimary } from "@/lib/styles";
 
 // Full-screen opener: photo spiral (WebGL) behind the title, intro copy, CTAs, stats.
 export default function HeroSection() {
@@ -35,19 +35,13 @@ export default function HeroSection() {
               <Wordmark />
             </div>
 
-            <h1
-              data-intro="true"
-              style={{ animationDelay: "720ms" }}
-              className="relative mt-8 font-display text-3xl font-medium tracking-[-0.03em] text-ink-strong sm:text-4xl"
-            >
-              Từ Rocafonda <span className={`${serif} text-muted`}>tới đỉnh thế giới.</span>
-            </h1>
-
+            {/* The wordmark is drawn, so the page's heading is kept for screen readers. */}
+            <h1 className="sr-only">Lamine Yamal</h1>
 
             <div
               data-intro="true"
               style={{ animationDelay: "960ms" }}
-              className="pointer-events-auto relative mt-7 flex flex-wrap items-center justify-center gap-3"
+              className="pointer-events-auto relative mt-10 flex flex-wrap items-center justify-center gap-3"
             >
               <a href="#goals" className={ctaPrimary}>
                 Xem bàn thắng

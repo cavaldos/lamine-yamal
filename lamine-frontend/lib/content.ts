@@ -32,12 +32,14 @@ export const JOURNEY: Chapter[] = [
     title: "Một cậu bé ở Rocafonda",
     body: "Sinh ra tại Esplugues de Llobregat, lớn lên ở khu Rocafonda, Mataró. Bố người Morocco, mẹ người Guinea Xích Đạo. Mã bưu chính 08304 về sau thành màn ăn mừng “304”.",
     stat: ["304", "Rocafonda"],
+    photo: "/journey/2007-rocafonda.jpg",
   },
   {
     year: "2007",
     date: "Thu 2007",
     title: "Tấm ảnh với Messi",
     body: "Vài tháng tuổi, Lamine được một Lionel Messi 20 tuổi bế trong buổi chụp lịch từ thiện tại Camp Nou. 17 năm sau, tấm ảnh lan khắp thế giới.",
+    photo: "/journey/2007-messi.jpg",
   },
   {
     year: "2014",
@@ -45,6 +47,7 @@ export const JOURNEY: Chapter[] = [
     title: "Bước vào La Masia",
     body: "Lên 7 tuổi, Lamine vượt qua buổi thử việc và gia nhập học viện La Masia của Barcelona, đi qua mọi cấp độ trẻ từ Alevín tới Juvenil.",
     stat: ["7", "tuổi"],
+    photo: "/journey/2014-la-masia.jpg",
   },
   {
     year: "2023",
@@ -52,6 +55,7 @@ export const JOURNEY: Chapter[] = [
     title: "Ra mắt đội một",
     body: "Vào sân trong trận Barcelona 4-0 Real Betis, trở thành một trong những cầu thủ trẻ nhất từng ra sân cho Barça.",
     stat: ["15", "tuổi 290 ngày"],
+    photo: "/journey/2023-debut.jpg",
   },
   {
     year: "2023",
@@ -66,6 +70,14 @@ export const JOURNEY: Chapter[] = [
     title: "Siêu phẩm vào lưới Pháp",
     body: "Cú cứa lòng từ ngoài vòng cấm ở bán kết EURO 2024 biến cậu thành cầu thủ ghi bàn trẻ nhất lịch sử giải đấu. Năm ngày sau, Tây Ban Nha vô địch châu Âu.",
     stat: ["16", "tuổi 362 ngày"],
+    photo: "/journey/2024-euro-goal.webp",
+  },
+  {
+    year: "2024",
+    date: "14 · 07 · 2024",
+    title: "Vô địch châu Âu",
+    body: "Tây Ban Nha đánh bại Anh 2-1 ở chung kết EURO 2024 tại Berlin. Lamine nhận giải Cầu thủ trẻ xuất sắc nhất giải.",
+    photo: "/journey/2024-euro-champion.webp",
   },
   {
     year: "2025",
@@ -73,6 +85,7 @@ export const JOURNEY: Chapter[] = [
     title: "Cú ăn ba quốc nội & áo số 10",
     body: "La Liga, Copa del Rey và Supercopa trong cùng một mùa. Mùa hè 2025, Lamine chính thức khoác chiếc áo số 10 của Barcelona.",
     stat: ["10", "số áo"],
+    photo: "/journey/2025-copa-del-rey.jpg",
   },
   {
     year: "2026",
@@ -80,6 +93,7 @@ export const JOURNEY: Chapter[] = [
     title: "Vô địch thế giới",
     body: "Tây Ban Nha đánh bại Argentina 1-0 sau hiệp phụ ở chung kết World Cup 2026. Ở tuổi 19, Lamine đã có cả EURO lẫn World Cup.",
     stat: ["19", "tuổi"],
+    photo: "/journey/2026-world-cup.jpg",
   },
 ];
 
@@ -115,13 +129,20 @@ export const COUNTRY_TITLE_COUNT = TROPHIES.filter((t) => t.scope === "country")
 
 export const AWARDS: [string, string][] = [
   ["Golden Boy", "2024"],
-  ["Kopa Trophy", "2024 · 2025"],
+  ["Kopa Trophy ×2", "2024 · 2025"],
   ["EURO Young Player", "2024"],
   ["Laureus Breakthrough", "2025"],
   ["La Liga Player of the Season", "2025/26"],
 ];
 
 export type Video = { youtube: string; title: string; source: string; length?: string };
+
+// The clip that loops, muted, behind the home page's highlights section.
+export const HIGHLIGHT_LOOP: Video = {
+  youtube: "WXpSDZzRCPI",
+  title: "Rabona trước Galatasaray",
+  source: "Jens E",
+};
 
 export const HIGHLIGHTS: Video[] = [
   {

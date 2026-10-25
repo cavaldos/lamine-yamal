@@ -1,7 +1,6 @@
 import Link from "next/link";
 import CountUp from "@/components/ui/count-up";
 import { ALL_GOALS, SEASONS } from "@/lib/goals";
-import { h2, lead, serif } from "@/lib/styles";
 
 const STATS: [number, string][] = [
   [ALL_GOALS.length, "Bàn thắng"],
@@ -21,19 +20,7 @@ export default function GoalsHero() {
         <p className="hud-label text-faint">Goals · All competitions</p>
       </div>
 
-      <div className="relative overflow-hidden px-6 py-14 md:px-10 md:py-20">
-        <div aria-hidden className="hero-glow opacity-70" />
-        <h1 data-intro="true" className={`relative ${h2}`}>
-          Mọi bàn thắng, <span className={serif}>liền một mạch.</span>
-        </h1>
-        <p data-intro="true" style={{ animationDelay: "120ms" }} className={`relative ${lead}`}>
-          Chọn <span className="text-ink">Thông thường</span> để lướt từng bàn như TikTok, hoặc{" "}
-          <span className="text-ink">Liền mạch</span> để xem tất cả nối tiếp nhau như một thước phim. Tìm và lọc trước,
-          rồi bấm vào bất kỳ bàn nào để bắt đầu từ đó.
-        </p>
-      </div>
-
-      <dl className="grid grid-cols-2 border-t border-line md:grid-cols-4">
+      <dl className="grid grid-cols-2 md:grid-cols-4">
         {STATS.map(([value, label], i) => (
           <div
             key={label}

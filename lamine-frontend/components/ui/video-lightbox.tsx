@@ -83,7 +83,7 @@ export default function VideoLightbox() {
           {video && (
             <iframe
               key={video.youtube}
-              src={`https://www.youtube-nocookie.com/embed/${video.youtube}?autoplay=1&rel=0&modestbranding=1${
+              src={`https://www.youtube-nocookie.com/embed/${video.youtube}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&playsinline=1&color=white${
                 video.start ? `&start=${video.start}` : ""
               }${video.end ? `&end=${video.end}` : ""}`}
               title={video.title}

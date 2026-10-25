@@ -18,8 +18,8 @@ export const SECTIONS: SectionMeta[] = [
   { id: "hero", num: "00", label: "Lamine", nav: "Lamine" },
   { id: "trophies", num: "01", label: "Danh hiệu", nav: "Trophies", hint: "CLB · Đội tuyển · Cá nhân" },
   { id: "goals", num: "02", label: "Bàn thắng", nav: "Goals", hint: "Bản đồ cú sút · La Liga" },
-  { id: "highlights", num: "03", label: "Highlight", nav: "Highlights", hint: "Bấm để xem ngay trên trang" },
-  { id: "archive", num: "04", label: "Tư liệu", nav: "Archive", hint: "Ảnh & video thời thơ ấu" },
+  { id: "highlights", num: "03", label: "Highlight", nav: "Highlights", hint: "Xem tất cả ở trang riêng" },
+  { id: "archive", num: "04", label: "Tư liệu", nav: "Archive", hint: "Album ảnh thời thơ ấu" },
   { id: "journey", num: "05", label: "Hành trình", nav: "Journey" },
 ];
 

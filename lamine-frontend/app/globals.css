@@ -274,6 +274,32 @@ html.theme-anim body * {
   }
 }
 
+/* MorphText: the old text blurs up and away, the new one settles in. */
+@keyframes morph-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(0.3em);
+  }
+}
+
+@keyframes morph-out {
+  to {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(-0.3em);
+  }
+}
+
+.morph-in {
+  animation: morph-in 0.4s var(--ease-reveal) both;
+}
+
+.morph-out {
+  animation: morph-out 0.28s var(--ease-reveal) both;
+  pointer-events: none;
+}
+
 @keyframes rule-draw {
   from {
     transform: scaleX(0);
@@ -423,28 +449,6 @@ html.theme-anim body * {
   to { transform: translate3d(2%, -3%, 0) scale(1.06); }
 }
 
-/* Manifesto: each word lights up as the paragraph scrolls through. */
-.manifesto-word {
-  color: var(--ink-strong);
-  opacity: 0.22;
-}
-
-@supports (animation-timeline: view()) {
-  .manifesto {
-    view-timeline-name: --manifesto;
-  }
-
-  .manifesto-word {
-    animation: word-light linear both;
-    animation-timeline: --manifesto;
-  }
-}
-
-@keyframes word-light {
-  from { opacity: 0.22; }
-  to { opacity: 1; }
-}
-
 /* Cards that catch a pointer-following blaugrana light (desktop only). */
 .glow-card {
   position: relative;
@@ -583,11 +587,6 @@ html.theme-anim body * {
 @media (prefers-reduced-motion: reduce) {
   .hero-glow {
     animation: none !important;
-  }
-
-  .manifesto-word {
-    animation: none !important;
-    opacity: 1;
   }
 
   .lift:hover,

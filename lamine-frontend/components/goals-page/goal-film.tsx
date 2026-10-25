@@ -6,11 +6,9 @@ import FilmProgress from "@/components/goals-page/film-progress";
 import GoalFacts from "@/components/goals-page/goal-facts";
 import { useGoalPlayer } from "@/components/goals-page/use-goal-player";
 import { Expand, Pause, Play, Replay, SkipNext, SkipPrev, Volume, VolumeOff, X } from "@/components/ui/icons";
-import { fmtDate, goalTitle, goalVideo, shortSeason, thumb, type Goal } from "@/lib/goals";
+import { goalTitle, goalVideo, poster, thumb, type Goal } from "@/lib/goals";
 import { fmtTime } from "@/lib/youtube";
 
-// How long each goal's title card holds before its clip rolls.
-const CARD_MS = 1300;
 // Controls fade out after this long without the pointer moving.
 const IDLE_MS = 2600;
 
@@ -18,22 +16,21 @@ const ctl =
   "flex h-10 w-10 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/15 hover:text-white";
 
 // Back-to-back mode: every goal in the list plays in a row, like one film.
-// A title card introduces each goal while its clip loads behind it; the bar at
-// the bottom has one segment per goal.
+// Each clip starts straight away, over its poster; the bar at the bottom has
+// one segment per goal.
 export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; start: number; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
   const clock = useRef<HTMLSpanElement>(null);
   const indexRef = useRef(start);
   const lastTime = useRef(0);
-  const cardTimer = useRef(0);
   const [index, setIndex] = useState(start);
   const [done, setDone] = useState(false);
   const [idle, setIdle] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   // Destructured: the hook also returns a ref (host), and render may only read plain values.
-  const { host, started, playing, muted, cue, play, pause, toggle, restart, setMuted } = useGoalPlayer({
+  const { host, started, playing, muted, load, pause, toggle, restart, setMuted } = useGoalPlayer({
     onEnded: () => next(),
     onError: () => {
       setNotice("Clip này không phát được, chuyển sang bàn tiếp theo…");
@@ -46,7 +43,7 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
     },
   });
 
-  // Title card first, then the clip.
+  // Load the clip and play it at once.
   const show = useCallback(
     (i: number) => {
       indexRef.current = i;
@@ -54,11 +51,9 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
       setDone(false);
       setNotice(null);
       if (fill.current) fill.current.style.transform = "scaleX(0)";
-      cue(goalVideo(goals[i]));
-      window.clearTimeout(cardTimer.current);
-      cardTimer.current = window.setTimeout(play, CARD_MS);
+      load(goalVideo(goals[i]));
     },
-    [cue, play, goals],
+    [load, goals],
   );
 
   // Declared as a function so the player callbacks above can reach it.
@@ -89,7 +84,6 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
     lockScroll(true);
     show(start);
     return () => {
-      window.clearTimeout(cardTimer.current);
       lockScroll(false);
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     };
@@ -123,8 +117,7 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
 
   const goal = goals[index];
   const video = goalVideo(goal);
-  const carding = !done && !started;
-  const hideChrome = idle && playing && !carding;
+  const hideChrome = idle && playing;
 
   return (
     <dialog
@@ -158,6 +151,16 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
               }`}
             >
               <div ref={host} className="pointer-events-none absolute inset-0 [&_iframe]:h-full [&_iframe]:w-full" />
+              {!started && !done && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={video.id}
+                  src={poster(video, true)}
+                  alt=""
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 h-full w-full bg-black object-cover"
+                />
+              )}
             </div>
           </div>
 
@@ -179,13 +182,11 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
           )}
 
           {/* What is on screen right now, bottom left. */}
-          {!carding && !done && (
+          {!done && (
             <div className="pointer-events-none absolute bottom-0 left-0 max-w-xl bg-linear-to-tr from-black/70 via-black/30 to-transparent p-5 md:p-8">
               <GoalFacts goal={goal} demo={video.demo} />
             </div>
           )}
-
-          {carding && <TitleCard key={index} goal={goal} index={index} total={goals.length} demo={video.demo} />}
 
           {done && (
             <div className="absolute inset-0 grid place-items-center bg-black/80 p-6 text-center">
@@ -271,26 +272,5 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
         </div>
       </div>
     </dialog>
-  );
-}
-
-// The card between goals: which goal, when, against whom.
-function TitleCard({ goal, index, total, demo }: { goal: Goal; index: number; total: number; demo: boolean }) {
-  return (
-    <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/75 p-6 text-center backdrop-blur-sm">
-      <div style={{ animation: "reveal-in 0.6s var(--ease-reveal) both" }}>
-        <p className="hud-label text-white/60">
-          Bàn {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </p>
-        <p className="text-blaugrana mt-3 font-display text-[clamp(5rem,18vw,11rem)] leading-[0.85] font-bold tracking-[-0.05em]">
-          {goal.minute}
-        </p>
-        <p className="mt-4 font-display text-3xl font-medium tracking-[-0.03em] md:text-5xl">{goalTitle(goal)}</p>
-        <p className="mt-2 text-white/70">
-          {goal.score} · {fmtDate(goal.date)} · Mùa {shortSeason(goal.season)}
-        </p>
-        {demo && <p className="hud-label mt-4 text-white/45">Video demo</p>}
-      </div>
-    </div>
   );
 }

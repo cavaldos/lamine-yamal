@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import FilterChips from "@/components/ui/filter-chips";
 import { ChevronDown, Film, Play, Search, Swipe, X } from "@/components/ui/icons";
+import Select from "@/components/ui/select";
 import {
   ALL,
   AREAS,
@@ -44,6 +45,9 @@ export default function GoalToolbar({
   onPlayAll: () => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
+  const panelId = useId();
+  const [open, setOpen] = useState(false);
   const set = (patch: Partial<GoalQuery>) => onQuery({ ...query, ...patch });
   const filtered =
     query.season !== ALL ||
@@ -75,6 +79,23 @@ export default function GoalToolbar({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // The filter panel closes on Escape or a click outside the bar.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!bar.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   const filters = (
     <div className="flex flex-col gap-3">
       <FilterChips
@@ -104,90 +125,92 @@ export default function GoalToolbar({
   return (
     <>
       <div className="z-30 border-y border-line bg-bg/95 backdrop-blur md:sticky md:top-12">
-        <div className="flex flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 md:px-10">
-          <label className="flex h-11 min-w-0 flex-1 basis-full items-center md:basis-64 gap-2 border border-line-strong bg-bg-raised px-3 focus-within:border-accent">
-            <Search className="h-4 w-4 shrink-0 text-faint" />
-            <span className="sr-only">Tìm bàn thắng</span>
-            <input
-              ref={input}
-              type="search"
-              value={query.q}
-              onChange={(e) => set({ q: e.target.value })}
-              placeholder="Tìm đối thủ, kiến tạo, ngày, phút…"
-              className="h-full min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
-            />
-            {query.q ? (
+        <div ref={bar} className="relative">
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 md:px-10">
+            <div className="flex h-11 min-w-0 flex-1 basis-full items-center gap-2 border border-line-strong bg-bg-raised pl-3 focus-within:border-accent md:basis-64">
+              <Search className="h-4 w-4 shrink-0 text-faint" />
+              <input
+                ref={input}
+                type="search"
+                aria-label="Tìm bàn thắng"
+                value={query.q}
+                onChange={(e) => set({ q: e.target.value })}
+                placeholder="Tìm đối thủ, kiến tạo, ngày, phút…"
+                className="h-full min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
+              />
+              {query.q && (
+                <button
+                  type="button"
+                  onClick={() => set({ q: "" })}
+                  aria-label="Xoá tìm kiếm"
+                  className="text-faint hover:text-ink"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              {!query.q && (
+                <kbd className="hud-label hidden border border-line px-1.5 text-faint sm:inline">/</kbd>
+              )}
               <button
                 type="button"
-                onClick={() => set({ q: "" })}
-                aria-label="Xoá tìm kiếm"
-                className="text-faint hover:text-ink"
+                aria-expanded={open}
+                aria-controls={panelId}
+                onClick={() => setOpen((o) => !o)}
+                className="hud-label flex h-full items-center gap-2 border-l border-line px-3 text-muted transition-colors hover:text-ink aria-expanded:bg-invert-bg aria-expanded:text-invert-fg"
               >
-                <X className="h-4 w-4" />
+                Bộ lọc
+                {activeFilters > 0 && <span className="text-garnet-ink in-aria-expanded:text-invert-fg">· {activeFilters}</span>}
+                <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
               </button>
-            ) : (
-              <kbd className="hud-label hidden border border-line px-1.5 text-faint sm:inline">/</kbd>
-            )}
-          </label>
+            </div>
 
-          <label className="relative flex h-11 flex-1 items-center border border-line bg-bg-raised sm:flex-none">
-            <span className="sr-only">Sắp xếp</span>
-            <select
+            <Select
+              label="Sắp xếp"
+              items={SORTS.map(([label]) => label)}
               value={query.sort}
-              onChange={(e) => set({ sort: Number(e.target.value) })}
-              className="hud-label h-full w-full appearance-none bg-transparent pr-9 pl-3 text-muted outline-none"
-            >
-              {SORTS.map(([label], i) => (
-                <option key={label} value={i} className="bg-bg-raised text-ink">
-                  {label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-faint" />
-          </label>
+              onChange={(sort) => set({ sort })}
+              className="h-11 flex-1 sm:w-56 sm:flex-none"
+            />
 
-          <div role="radiogroup" aria-label="Chế độ xem" className="flex h-11 border border-line">
-            {MODES.map(([m, label, Icon]) => (
-              <button
-                key={m}
-                type="button"
-                role="radio"
-                aria-checked={mode === m}
-                onClick={() => onMode(m)}
-                className="hud-label flex items-center gap-2 px-3 text-muted transition-colors hover:text-ink aria-checked:bg-invert-bg aria-checked:text-invert-fg"
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{label}</span>
-              </button>
-            ))}
+            <div role="radiogroup" aria-label="Chế độ xem" className="flex h-11 border border-line">
+              {MODES.map(([m, label, Icon]) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === m}
+                  onClick={() => onMode(m)}
+                  className="hud-label flex items-center gap-2 px-3 text-muted transition-colors hover:text-ink aria-checked:bg-invert-bg aria-checked:text-invert-fg"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={onPlayAll}
+              disabled={count === 0}
+              aria-label={`${mode === "film" ? "Phát liền mạch" : "Bắt đầu xem"} ${count} bàn`}
+              className="ml-auto inline-flex h-11 items-center gap-2 bg-linear-to-r from-accent to-garnet px-4 font-mono text-[11px] font-bold tracking-[0.12em] text-white uppercase transition-opacity hover:opacity-85 disabled:opacity-40"
+            >
+              <Play className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{mode === "film" ? "Phát liền mạch" : "Bắt đầu xem"} · </span>
+              {count}
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onPlayAll}
-            disabled={count === 0}
-            aria-label={`${mode === "film" ? "Phát liền mạch" : "Bắt đầu xem"} ${count} bàn`}
-            className="ml-auto inline-flex h-11 items-center gap-2 bg-linear-to-r from-accent to-garnet px-4 font-mono text-[11px] font-bold tracking-[0.12em] text-white uppercase transition-opacity hover:opacity-85 disabled:opacity-40"
-          >
-            <Play className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{mode === "film" ? "Phát liền mạch" : "Bắt đầu xem"} · </span>
-            {count}
-          </button>
+          {open && (
+            <div
+              id={panelId}
+              className="thin-scroll absolute inset-x-0 top-full max-h-[70svh] overflow-y-auto border-y border-line-strong bg-bg-raised px-4 py-5 shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6)] md:px-10"
+            >
+              {filters}
+            </div>
+          )}
         </div>
-
-        {/* On phones the filters fold into the sticky bar. */}
-        <details className="group border-t border-line md:hidden">
-          <summary className="hud-label flex cursor-pointer list-none items-center justify-between px-4 py-3 text-muted [&::-webkit-details-marker]:hidden">
-            Bộ lọc
-            {activeFilters > 0 && <span className="text-garnet-ink"> · {activeFilters}</span>}
-            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="thin-scroll max-h-[50svh] overflow-y-auto px-4 pb-4">{filters}</div>
-        </details>
       </div>
-
-      {/* On wide screens they sit open below it and scroll away. */}
-      <div className="hidden border-b border-line px-10 py-5 md:block">{filters}</div>
 
       <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-2.5 md:px-10">
         <p className="hud-label text-faint" aria-live="polite">

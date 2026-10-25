@@ -1,10 +1,12 @@
 "use client";
 
+import HoverPreview, { useHoverPreview } from "@/components/ui/hover-preview";
 import { Play } from "@/components/ui/icons";
 import { openVideo } from "@/components/ui/video-lightbox";
 import type { Video } from "@/lib/content";
 
-// A YouTube thumbnail that opens the shared player — no iframe until it is asked for.
+// A YouTube thumbnail that opens the shared player. Hovering plays a muted preview in place;
+// there is no iframe until then.
 export default function VideoCard({
   video,
   index,
@@ -14,10 +16,13 @@ export default function VideoCard({
   index: number;
   large?: boolean;
 }) {
+  const { active, handlers } = useHoverPreview();
+
   return (
     <button
       type="button"
       onClick={() => openVideo(video)}
+      {...handlers}
       className="glow-card group flex h-full w-full flex-col bg-bg text-left"
     >
       <div className="flex w-full items-center justify-between gap-4 border-b border-line px-5 py-2.5">
@@ -37,10 +42,13 @@ export default function VideoCard({
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
         />
+        {active && <HoverPreview id={video.youtube} />}
         <span className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
-        <span className="absolute top-1/2 left-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white ring-1 ring-white/40 transition-[background-color,transform] duration-200 group-hover:scale-110 group-hover:bg-garnet">
-          <Play className="ml-0.5 h-5 w-5" />
-        </span>
+        {!active && (
+          <span className="absolute top-1/2 left-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white ring-1 ring-white/40 transition-[background-color,transform] duration-200 group-hover:scale-110 group-hover:bg-garnet">
+            <Play className="ml-0.5 h-5 w-5" />
+          </span>
+        )}
         {video.length && (
           <span className="hud-label absolute right-3 bottom-3 bg-black/70 px-2 py-1 text-white">
             {video.length}

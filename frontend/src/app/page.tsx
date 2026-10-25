@@ -102,7 +102,7 @@ const TROPHIES = [
 
 const AWARDS = [
   ["Golden Boy", "2024"],
-  ["Kopa Trophy", "2024 · 2025"],
+  ["Kopa Trophy ×2", "2024 · 2025"],
   ["La Liga Player of the Season", "2025–26"],
   ["Ballon d'Or", "2nd, 2025"],
   ["IFFHS World's Best Youth Player", "2024 · 2025"],
