@@ -4,12 +4,13 @@ import GoalBrowser from "@/components/goals-page/goal-browser";
 import GoalsHero from "@/components/goals-page/goals-hero";
 import { hasLocale } from "@/lib/i18n/config";
 import { loadDictionary } from "@/lib/i18n/get-dictionary";
+import { createPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/goals">): Promise<Metadata> {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const { meta } = await loadDictionary(lang);
-  return { title: meta.goalsTitle, description: meta.goalsDescription };
+  return createPageMetadata(lang, meta.goalsTitle, meta.goalsDescription, "/goals");
 }
 
 // /<lang>/goals — every goal as a video: grid, search and filters, and two ways to watch.

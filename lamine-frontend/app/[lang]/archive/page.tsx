@@ -5,12 +5,13 @@ import PhotoReel from "@/components/sections/archive/photo-reel";
 import { ARCHIVE_PHOTOS } from "@/lib/content";
 import { format, hasLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale, loadDictionary } from "@/lib/i18n/get-dictionary";
+import { createPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/archive">): Promise<Metadata> {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const { meta } = await loadDictionary(lang);
-  return { title: meta.archiveTitle, description: meta.archiveDescription };
+  return createPageMetadata(lang, meta.archiveTitle, meta.archiveDescription, "/archive");
 }
 
 // /<lang>/archive — the childhood photo album, on its own page.
