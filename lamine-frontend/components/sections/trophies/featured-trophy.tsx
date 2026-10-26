@@ -14,7 +14,7 @@ export default function FeaturedTrophy({
 }) {
   const year = trophy.years[0];
   return (
-    <article data-reveal="true" data-shuffle-host className="glow-card lift overflow-hidden bg-bg p-6 md:p-10">
+    <article data-reveal="true" data-shuffle-host className="glow-card edge-glow edge-glow-gold lift overflow-hidden bg-bg p-6 md:p-10">
       {/* Behind the text (z -1) and faded out on the left, so its strokes never cross the title. */}
       <p
         aria-hidden

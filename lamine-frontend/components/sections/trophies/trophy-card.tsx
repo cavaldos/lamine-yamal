@@ -5,7 +5,7 @@ import type { Trophy } from "@/lib/content";
 // Compact card: trophy name, how many times, and each season as a chip.
 export default function TrophyCard({ trophy }: { trophy: Trophy }) {
   return (
-    <article data-reveal="true" data-shuffle-host className="glow-card bg-bg p-6 md:p-8">
+    <article data-reveal="true" data-shuffle-host className="glow-card edge-glow bg-bg p-6 md:p-8">
       <div className="flex items-center justify-between">
         <Cup className="h-6 w-6 text-accent-ink" />
         <p className="font-display text-3xl font-bold tracking-[-0.04em] text-accent-ink">×{trophy.years.length}</p>
