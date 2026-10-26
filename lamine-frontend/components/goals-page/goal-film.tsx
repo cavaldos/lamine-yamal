@@ -185,9 +185,10 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
             </span>
           )}
 
-          {/* What is on screen right now, bottom left. */}
+          {/* What is on screen right now, bottom left. Pinned to both edges on phones: left to
+              size itself, the box would grow to the untruncated title and run off screen. */}
           {!done && (
-            <div className="pointer-events-none absolute bottom-0 left-0 max-w-xl bg-linear-to-tr from-black/70 via-black/30 to-transparent p-5 md:p-8">
+            <div className="pointer-events-none absolute right-0 bottom-0 left-0 max-w-xl bg-linear-to-tr from-black/70 via-black/30 to-transparent p-4 sm:p-5 md:right-auto md:p-8">
               <GoalFacts goal={goal} demo={video.demo} />
             </div>
           )}

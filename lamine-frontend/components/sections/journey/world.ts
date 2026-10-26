@@ -22,6 +22,7 @@ export const STRIPE = 420; // px depth of each mowing stripe
 export const VIEW_STATIONS = 3.2; // how far ahead the floor and particles are drawn
 export const PARTICLES = 150;
 export const NAV_H = 48;
+export const FIT_PAD = 64; // px kept clear above and below a card: the HUD on top, the scroll hint below
 
 export const N = JOURNEY.length;
 

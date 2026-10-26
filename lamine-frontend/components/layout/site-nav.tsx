@@ -11,8 +11,9 @@ import { navSectionsFor } from "@/lib/sections";
 const link =
   "group flex h-full items-center px-2.5 hud-label whitespace-nowrap transition-colors text-muted hover:text-ink";
 
+// Tighter on small phones so the logo, the CTA and the three icon buttons fit in 320px.
 const cta =
-  "inline-flex items-center justify-center gap-2 border-l border-line bg-invert-bg px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] whitespace-nowrap text-invert-fg transition-opacity hover:opacity-80";
+  "inline-flex items-center justify-center gap-2 border-l border-line bg-invert-bg px-3 font-mono text-[10px] font-bold uppercase tracking-[0.08em] whitespace-nowrap text-invert-fg transition-opacity hover:opacity-80 sm:px-5 sm:text-[11px] sm:tracking-[0.12em]";
 
 export default async function SiteNav() {
   const dict = await getDictionary();
@@ -30,7 +31,7 @@ export default async function SiteNav() {
           <SectionLink
             id="hero"
             label={WORDMARK}
-            className="flex items-center gap-3 border-r border-line px-4 text-ink-strong hover:opacity-70 sm:px-5"
+            className="flex shrink-0 items-center gap-3 border-r border-line px-3 text-ink-strong hover:opacity-70 sm:px-5"
           >
             <Logo className="h-[18px] w-auto" />
             <span className="hud-label hidden text-ink sm:inline">{WORDMARK}</span>
@@ -60,7 +61,7 @@ export default async function SiteNav() {
           <LanguageSwitcher />
 
           <details className="group flex items-stretch lg:hidden">
-            <summary className="flex w-12 cursor-pointer list-none items-center justify-center border-l border-line text-muted hover:bg-invert-bg hover:text-invert-fg [&::-webkit-details-marker]:hidden">
+            <summary className="flex w-10 cursor-pointer list-none items-center justify-center border-l border-line text-muted hover:bg-invert-bg hover:text-invert-fg sm:w-12 [&::-webkit-details-marker]:hidden">
               <span className="sr-only">{dict.nav.menu}</span>
               <Menu className="h-5 w-5 group-open:hidden" />
               <svg

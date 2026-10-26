@@ -27,6 +27,7 @@ export default function PhotoReel() {
       // Reduced motion: a plain swipeable strip, no pinning.
       sec.style.height = "auto";
       vp.style.position = "relative";
+      vp.style.top = "0"; // the sticky offset would push the strip down under the footer
       vp.style.height = "auto";
       vp.style.overflowX = "auto";
       return;

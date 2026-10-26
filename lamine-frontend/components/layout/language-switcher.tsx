@@ -55,7 +55,7 @@ export default function LanguageSwitcher() {
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="hud-label flex items-center gap-1.5 border-l border-line px-3 text-muted transition-colors hover:text-ink aria-expanded:bg-invert-bg aria-expanded:text-invert-fg"
+        className="hud-label flex items-center gap-1.5 border-l border-line px-2.5 text-muted transition-colors hover:text-ink aria-expanded:bg-invert-bg aria-expanded:text-invert-fg sm:px-3"
       >
         <Globe className="h-4 w-4" />
         <span className="uppercase">{locale}</span>

@@ -31,7 +31,7 @@ export default function FeaturedTrophy({
           <span className="mt-2 block text-sm text-gold">{year}</span>
         </p>
       </div>
-      <h3 className="mt-10 font-display text-4xl leading-[1.15] font-medium tracking-[-0.03em] text-ink-strong md:text-5xl">
+      <h3 className="mt-10 font-display text-3xl leading-[1.15] font-medium tracking-[-0.03em] text-ink-strong sm:text-4xl md:text-5xl">
         <ShuffleText text={trophy.name} />
       </h3>
       {note && <p className="mt-2 max-w-md text-ink/80">{note}</p>}

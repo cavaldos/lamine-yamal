@@ -4,7 +4,7 @@ import { useDict } from "@/lib/i18n/provider";
 export default function ShotLegend() {
   const t = useDict().goals;
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       {LEGEND.map(([key, color]) => (
         <span key={key} className="hud-label flex items-center gap-2 text-muted">
           <span className="h-2 w-2 rounded-full" style={{ background: color }} />

@@ -8,6 +8,7 @@ import {
   camera,
   clamp01,
   DEPTH,
+  FIT_PAD,
   N,
   NAV_H,
   PERSPECTIVE,
@@ -27,6 +28,7 @@ export default function FlightJourney() {
   const view = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const stations = useRef<(HTMLDivElement | null)[]>([]);
+  const fits = useRef<(HTMLDivElement | null)[]>([]);
   const bar = useRef<HTMLSpanElement>(null);
   const counter = useRef<HTMLSpanElement>(null);
   const dateOut = useRef<HTMLSpanElement>(null);
@@ -70,6 +72,14 @@ export default function FlightJourney() {
       cv.height = Math.round(h * dpr);
       cv.style.width = `${w}px`;
       cv.style.height = `${h}px`;
+      // A card taller than the room between the HUD and the hint (a short phone,
+      // a long translation) is scaled down to fit instead of being cut off.
+      const room = h - 2 * FIT_PAD;
+      fits.current.forEach((el) => {
+        if (!el) return;
+        const s = Math.min(1, room / el.offsetHeight);
+        el.style.transform = s < 1 ? `scale(${s.toFixed(3)})` : "";
+      });
       readColors();
       schedule();
     };
@@ -142,6 +152,8 @@ export default function FlightJourney() {
     const ro = new ResizeObserver(resize);
     ro.observe(vp);
     ro.observe(document.body);
+    // Cards change height as fonts load; scaling them does not, so this cannot loop.
+    fits.current.forEach((el) => el && ro.observe(el));
     const mo = new MutationObserver(() => {
       readColors();
       schedule();
@@ -205,26 +217,36 @@ export default function FlightJourney() {
                   pointerEvents: i === 0 ? "auto" : "none",
                 }}
               >
-                <Station chapter={ch} index={i} />
+                <div
+                  ref={(el) => {
+                    fits.current[i] = el;
+                  }}
+                >
+                  <Station chapter={ch} index={i} />
+                </div>
               </div>
             </div>
           );
         })}
 
         {/* HUD */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-[60] flex items-center justify-between border-b border-line bg-bg/75 px-6 py-3 md:px-10">
-          <p className="hud-label text-muted">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-[60] flex items-center justify-between gap-4 border-b border-line bg-bg/75 px-4 py-3 sm:px-6 md:px-10">
+          <p className="hud-label whitespace-nowrap text-muted">
             <span className="text-faint">{meta.num}</span>
             <span aria-hidden className="mx-2 text-faint">
               /
             </span>
             {meta.label}
           </p>
-          <p className="hud-label text-faint">
-            {dict.journey.chapter} <span ref={counter} className="text-ink">01</span> / {String(N).padStart(2, "0")}
-            <span className="mx-2">·</span>
-            <span ref={dateOut} className="text-garnet-ink">
-              {chapters[0].date}
+          {/* Narrow screens drop the word "Chapter", then the date (each card shows its own). */}
+          <p className="hud-label whitespace-nowrap text-faint">
+            <span className="hidden min-[360px]:inline">{dict.journey.chapter} </span>
+            <span ref={counter} className="text-ink">01</span> / {String(N).padStart(2, "0")}
+            <span className="hidden sm:inline">
+              <span className="mx-2">·</span>
+              <span ref={dateOut} className="text-garnet-ink">
+                {chapters[0].date}
+              </span>
             </span>
           </p>
         </div>
@@ -238,7 +260,7 @@ export default function FlightJourney() {
 
         <p
           ref={hint}
-          className="hud-label pointer-events-none absolute bottom-8 left-1/2 z-[60] -translate-x-1/2 whitespace-nowrap text-muted"
+          className="hud-label pointer-events-none absolute bottom-6 left-1/2 z-[60] w-max max-w-[calc(100%-2rem)] -translate-x-1/2 text-center text-muted md:bottom-8"
         >
           <span className="inline-block animate-pulse">{dict.journey.scrollHint}</span>
         </p>

@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import FilterChips from "@/components/ui/filter-chips";
+import FilterMenu from "@/components/sections/goals/filter-menu";
 import GoalDetail from "@/components/sections/goals/goal-detail";
+import GoalPreview from "@/components/sections/goals/goal-preview";
 import GoalList from "@/components/sections/goals/goal-list";
 import GoalStats from "@/components/sections/goals/goal-stats";
 import ShotLegend from "@/components/sections/goals/shot-legend";
@@ -39,21 +41,29 @@ export default function GoalMap({ action }: { action?: React.ReactNode }) {
   return (
     <div className="grid gap-px border-t border-line bg-line lg:grid-cols-[1.05fr_1fr]">
       <div className="relative bg-bg-sunken p-4 md:p-8">
-        {action && <div className="mb-4">{action}</div>}
-        <ShotLegend />
+        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+          {action}
+          <ShotLegend />
+        </div>
         <ShotPitch goals={goals} shown={shown} focus={focus} onHover={setHover} onSelect={pick} />
         <GoalStats goals={visible} />
+        <GoalPreview goal={hover} />
       </div>
 
       <div className="flex min-w-0 flex-col bg-bg">
-        <div className="flex flex-col gap-3 border-b border-line px-6 py-5 md:px-8">
-          <FilterChips
-            label={dict.goalsPage.filterSeason}
-            items={seasonLabels(dict, seasons)}
-            value={seasons.indexOf(season)}
-            onChange={(i) => setSeason(seasons[i])}
-          />
-          <FilterChips label={dict.goalsPage.filterKind} items={kindLabels(dict)} value={kind} onChange={setKind} />
+        <div className="flex items-center border-b border-line px-6 py-3 md:px-8">
+          <FilterMenu
+            label={dict.goalsPage.filters}
+            summary={`${seasonLabels(dict, seasons)[seasons.indexOf(season)]} · ${kindLabels(dict)[kind]}`}
+          >
+            <FilterChips
+              label={dict.goalsPage.filterSeason}
+              items={seasonLabels(dict, seasons)}
+              value={seasons.indexOf(season)}
+              onChange={(i) => setSeason(seasons[i])}
+            />
+            <FilterChips label={dict.goalsPage.filterKind} items={kindLabels(dict)} value={kind} onChange={setKind} />
+          </FilterMenu>
         </div>
         <GoalDetail goal={focus} />
         <GoalList goals={visible} selectedId={selected.id} onSelect={pick} onHover={setHover} />

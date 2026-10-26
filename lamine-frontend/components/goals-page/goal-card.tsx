@@ -42,7 +42,7 @@ export default function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => v
             <span className="hud-label border border-white/35 px-1.5 py-0.5 text-[9px] text-white/80">{dict.goals.demoTag}</span>
           )}
         </span>
-        <span className="font-display text-3xl leading-none font-bold tracking-[-0.04em]">{goal.minute}</span>
+        <span className="font-display text-2xl leading-none font-bold tracking-[-0.04em] sm:text-3xl">{goal.minute}</span>
       </span>
 
       {!active && (
@@ -56,14 +56,15 @@ export default function GoalCard({ goal, onOpen }: { goal: Goal; onOpen: () => v
 
       <span className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-3 md:p-4">
         <span className="hud-label text-white/60">{fmtDate(goal.date)}</span>
-        <span className="font-display text-lg leading-tight font-medium tracking-[-0.02em] md:text-xl">
+        <span className="font-display text-base leading-tight font-medium tracking-[-0.02em] sm:text-lg md:text-xl">
           {goalTitle(goal)}
         </span>
         <span className="text-[13px] text-white/70">{goal.score}</span>
-        <span className="mt-1 flex items-center gap-1.5 text-[12px] text-white/75">
-          <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: tone(goal) }} />
+        {/* Plain text flow, so on a narrow card it wraps between words, not into two stacked columns. */}
+        <span className="mt-1 text-[12px] leading-snug text-white/75">
+          <span aria-hidden className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: tone(goal) }} />
           {penalty ? dict.goals.type.Penalty : (bodyLabel(goal, dict) ?? typeLabel(goal, dict))}
-          <span className="text-white/40">·</span>
+          <span className="text-white/40"> · </span>
           {competitionLabel(goal.competition, dict)}
         </span>
       </span>

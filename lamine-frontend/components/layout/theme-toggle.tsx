@@ -19,7 +19,7 @@ export default function ThemeToggle() {
         root.classList.add("theme-anim");
         setTimeout(() => root.classList.remove("theme-anim"), 400);
       }}
-      className="invert-block flex w-12 items-center justify-center border-l border-line text-muted hover:text-invert-fg"
+      className="invert-block flex w-10 items-center justify-center border-l border-line text-muted hover:text-invert-fg sm:w-12"
     >
       <Sun className="hidden h-4 w-4 dark:block" />
       <Moon className="h-4 w-4 dark:hidden" />

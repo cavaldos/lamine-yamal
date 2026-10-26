@@ -192,9 +192,12 @@ export default function HighlightTheater({
             )}
 
             {!done && (
-              <div className="pointer-events-none absolute bottom-0 left-0 max-w-xl bg-linear-to-tr from-black/70 via-black/30 to-transparent p-5 transition-opacity duration-300 group-data-[idle=true]/film:opacity-0 md:p-8">
+              <div className="pointer-events-none absolute right-0 bottom-0 left-0 max-w-xl bg-linear-to-tr from-black/70 via-black/30 to-transparent p-4 transition-opacity duration-300 group-data-[idle=true]/film:opacity-0 sm:p-5 md:right-auto md:p-8">
                 <p className="hud-label text-white/65">{video.source}</p>
-                <p className="mt-1.5 font-display text-xl font-medium tracking-[-0.03em] md:text-3xl">{videoTitle(video, dict)}</p>
+                {/* Small on a phone, where the picture is only ~200px tall and the title sits on it. */}
+                <p className="mt-1 line-clamp-2 font-display text-base font-medium tracking-[-0.03em] sm:mt-1.5 sm:text-xl md:text-3xl">
+                  {videoTitle(video, dict)}
+                </p>
               </div>
             )}
 

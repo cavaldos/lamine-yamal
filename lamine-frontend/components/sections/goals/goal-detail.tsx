@@ -21,7 +21,7 @@ export default function GoalDetail({ goal }: { goal: Goal }) {
 
   return (
     // Not keyed: each field morphs into the next goal's value in place.
-    <article className="border-b border-line px-6 py-6 md:px-8">
+    <article className="border-b border-line px-5 py-6 sm:px-6 md:px-8">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="hud-label text-garnet-ink">
@@ -29,14 +29,14 @@ export default function GoalDetail({ goal }: { goal: Goal }) {
               value={`${format(t.goalNo, { n: goal.n })} · ${fmtDate(goal.date)} · ${competitionLabel(goal.competition, dict)}`}
             />
           </p>
-          <h3 className="mt-2 font-display text-3xl font-medium tracking-[-0.03em] text-ink-strong">
+          <h3 className="mt-2 font-display text-2xl font-medium tracking-[-0.03em] text-ink-strong sm:text-3xl">
             <MorphText value={`${goal.home ? "vs" : "@"} ${goal.opponent}`} />
           </h3>
           <p className="mt-1 text-muted">
             <MorphText value={goal.score} />
           </p>
         </div>
-        <p className="shrink-0 font-display text-5xl leading-none font-bold tracking-[-0.04em]">
+        <p className="shrink-0 font-display text-4xl leading-none font-bold tracking-[-0.04em] sm:text-5xl">
           <MorphText value={goal.minute} className="text-blaugrana text-right" />
         </p>
       </div>

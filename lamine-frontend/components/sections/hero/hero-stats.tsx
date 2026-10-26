@@ -26,12 +26,12 @@ export default async function HeroStats() {
       {stats.map(([value, label], i) => (
         <div
           key={label}
-          className="flex min-w-0 flex-col justify-between border-t border-r border-line px-6 py-4 md:px-8 xl:px-6"
+          className="flex min-w-0 flex-col justify-between border-t border-r border-line px-4 py-3 sm:px-6 sm:py-4 md:px-8 xl:px-6"
         >
           <dt className="hud-label text-faint">{label}</dt>
           <dd className="mt-1 font-display text-3xl font-medium tracking-[-0.03em] text-ink-strong">
             {typeof value === "string" ? (
-              <span className="whitespace-nowrap text-2xl md:text-3xl">{value}</span>
+              <span className="whitespace-nowrap text-[clamp(1.125rem,5.6vw,1.5rem)] md:text-3xl">{value}</span>
             ) : value === null ? (
               <GoalCount delay={1200 + i * 90} />
             ) : (
