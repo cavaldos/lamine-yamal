@@ -28,8 +28,7 @@ export default function GoalPreview({ goal }: { goal: Goal | null }) {
   };
 
   useEffect(() => {
-    if (!goal) return setShown(null);
-    const t = window.setTimeout(() => setShown(goal), DELAY);
+    const t = window.setTimeout(() => setShown(goal), goal ? DELAY : 0);
     return () => window.clearTimeout(t);
   }, [goal]);
 
