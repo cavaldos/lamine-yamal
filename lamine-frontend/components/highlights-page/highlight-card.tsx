@@ -2,14 +2,14 @@
 
 import HoverPreview, { useHoverPreview } from "@/components/ui/hover-preview";
 import { Play } from "@/components/ui/icons";
-import { videoTitle, type Video } from "@/lib/content";
+import { highlightTitle, type Highlight } from "@/lib/highlights";
 import { format } from "@/lib/i18n/config";
-import { useDict } from "@/lib/i18n/provider";
+import { useDict, useLocale } from "@/lib/i18n/provider";
 
 // One video in the grid. Hovering plays it muted in place; clicking opens the player.
-export default function HighlightCard({ video, n, onOpen }: { video: Video; n: number; onOpen: () => void }) {
+export default function HighlightCard({ video, n, onOpen }: { video: Highlight; n: number; onOpen: () => void }) {
   const dict = useDict();
-  const title = videoTitle(video, dict);
+  const title = highlightTitle(video, useLocale());
   const { active, handlers } = useHoverPreview();
 
   return (

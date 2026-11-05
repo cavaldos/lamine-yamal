@@ -1,21 +1,17 @@
 import Link from "next/link";
-import CountUp from "@/components/ui/count-up";
-import { HIGHLIGHTS } from "@/lib/content";
+import HighlightCount, { type HighlightCountOf } from "@/components/ui/highlight-count";
 import { localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/get-dictionary";
-import { lengthSeconds, SOURCES } from "@/lib/highlights";
-
-const minutes = (s: number) => Math.round(s / 60);
 
 // Top of /highlights: a way back and a few totals.
 export default async function HighlightsHero() {
   const { highlightsPage: t, common } = await getDictionary();
   const locale = await getLocale();
-  const stats: [number, string][] = [
-    [HIGHLIGHTS.length, t.statVideos],
-    [SOURCES.length - 1, t.statSources],
-    [minutes(HIGHLIGHTS.reduce((n, v) => n + lengthSeconds(v), 0)), t.statMinutes],
-    [minutes(Math.max(...HIGHLIGHTS.map(lengthSeconds))), t.statLongest],
+  const stats: [HighlightCountOf, string][] = [
+    ["videos", t.statVideos],
+    ["sources", t.statSources],
+    ["minutes", t.statMinutes],
+    ["longest", t.statLongest],
   ];
   return (
     <header>
@@ -34,7 +30,7 @@ export default async function HighlightsHero() {
           >
             <dt className="hud-label text-faint">{label}</dt>
             <dd className="mt-1 font-display text-3xl font-medium tracking-[-0.03em] text-ink-strong">
-              <CountUp to={value} delay={200 + i * 90} />
+              <HighlightCount of={value} delay={200 + i * 90} />
             </dd>
           </div>
         ))}

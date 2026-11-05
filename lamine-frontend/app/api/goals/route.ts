@@ -1,6 +1,6 @@
 import { connection } from "next/server";
-import { fromPage, type RawGoal } from "@/lib/notion/goal-schema";
-import { allRows, NotionSetupError, notionEnv, openGoalsDb } from "@/lib/notion/goals-db";
+import { COLUMNS, fromPage, type RawGoal } from "@/lib/notion/goal-schema";
+import { allRows, NotionSetupError, notionEnv, openDb } from "@/lib/notion/db";
 
 // GET /api/goals → every goal in the Notion database, in the JSON file's shape:
 // { goals: RawGoal[], fetchedAt: number }. The browser keeps the result in
@@ -11,12 +11,12 @@ export async function GET() {
   await connection();
   const headers = { "Cache-Control": "no-store" };
 
-  if (!notionEnv()) {
+  if (!notionEnv("goals")) {
     return Response.json({ error: "Notion is not configured" }, { status: 503, headers });
   }
   try {
-    const db = await openGoalsDb();
-    const goals = (await allRows(db)).map(fromPage).filter((g): g is RawGoal => g !== null);
+    const db = await openDb("goals");
+    const goals = (await allRows(db, COLUMNS.date)).map(fromPage).filter((g): g is RawGoal => g !== null);
     return Response.json({ goals, fetchedAt: Date.now() }, { headers });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

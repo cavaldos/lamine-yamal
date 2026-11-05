@@ -4,27 +4,31 @@ import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import HighlightCard from "@/components/highlights-page/highlight-card";
 import HighlightTheater from "@/components/highlights-page/highlight-theater";
 import HighlightToolbar from "@/components/highlights-page/highlight-toolbar";
-import { HIGHLIGHTS, type Video } from "@/lib/content";
-import { EMPTY_QUERY, queryHighlights, type HighlightQuery } from "@/lib/highlights";
-import { useDict } from "@/lib/i18n/provider";
+import { EMPTY_QUERY, queryHighlights, type Highlight, type HighlightQuery } from "@/lib/highlights";
+import { useHighlights } from "@/lib/highlights-store";
+import { useDict, useLocale } from "@/lib/i18n/provider";
 
-type Open = { videos: Video[]; index: number } | null;
+type Open = { videos: Highlight[]; index: number } | null;
 
 // The interactive part of /highlights: toolbar, grid and the player.
 // Clicking a card opens the player at that video, over the filtered list.
 export default function HighlightBrowser() {
   const dict = useDict();
+  const locale = useLocale();
+  const all = useHighlights();
   const [query, setQuery] = useState<HighlightQuery>(EMPTY_QUERY);
   const [open, setOpen] = useState<Open>(null);
-  const videos = useMemo(() => queryHighlights(query, dict), [query, dict]);
+  const videos = useMemo(() => queryHighlights(all, query, locale), [all, query, locale]);
 
   // Links like /highlights#watch-MZ5z-dLhjUE open that video, once the page has hydrated.
+  // Read once: the list can change later when Notion answers, but the link was for this visit.
   useEffect(() => {
     const id = window.location.hash.match(/^#watch-([\w-]{11})$/)?.[1];
-    const at = HIGHLIGHTS.findIndex((v) => v.youtube === id);
+    const at = all.findIndex((v) => v.youtube === id);
     // The URL can only be read after hydration, so this state is set from an effect.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (at >= 0) setOpen({ videos: HIGHLIGHTS, index: at });
+    if (at >= 0) setOpen({ videos: all, index: at });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Next.js keeps this page alive (hidden) after navigating away; close the
@@ -42,14 +46,15 @@ export default function HighlightBrowser() {
         query={query}
         onQuery={setQuery}
         count={videos.length}
-        total={HIGHLIGHTS.length}
+        total={all.length}
+        all={all}
         onPlayAll={() => setOpen({ videos, index: 0 })}
       />
 
       {videos.length > 0 ? (
         <div className="grid gap-px p-px sm:grid-cols-2 lg:grid-cols-3">
           {videos.map((v, i) => (
-            <HighlightCard key={v.youtube} video={v} n={i + 1} onOpen={() => setOpen({ videos, index: i })} />
+            <HighlightCard key={v.id} video={v} n={i + 1} onOpen={() => setOpen({ videos, index: i })} />
           ))}
         </div>
       ) : (

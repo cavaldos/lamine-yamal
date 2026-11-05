@@ -1,4 +1,17 @@
-import type { CreatePageParameters, PageObjectResponse } from "@notionhq/client";
+import type { PageObjectResponse } from "@notionhq/client";
+import { formatClipRange, parseClipRange } from "../timecode.ts";
+import {
+  orNull,
+  readCheckbox,
+  readSelect,
+  readText,
+  readUrl,
+  select,
+  text,
+  title,
+  type ColumnType,
+  type Properties,
+} from "./props.ts";
 
 // How a goal is stored in the Notion database, one row per goal.
 // Shared by the API route (Notion → app) and scripts/notion-sync.mts (JSON → Notion),
@@ -23,7 +36,7 @@ export type RawGoal = {
   description: string;
   espn_event_id: string;
   youtube?: string | null;
-  start?: number;
+  start?: number; // seconds into the video; Notion keeps both in "Clip Time"
   end?: number;
 };
 
@@ -46,12 +59,12 @@ export const COLUMNS = {
   description: "Description",
   espnId: "ESPN Event ID",
   youtube: "YouTube",
-  start: "Clip Start",
-  end: "Clip End",
+  // The part of the video to play, typed as "06:43, 7:34" or "1:02:30, 1:03:10".
+  clip: "Clip Time",
 } as const;
 
 // Column → Notion property type. Select options are created on first use.
-export const COLUMN_TYPES: Record<string, "rich_text" | "date" | "select" | "checkbox" | "url" | "number"> = {
+export const COLUMN_TYPES: Record<string, ColumnType> = {
   [COLUMNS.key]: "rich_text",
   [COLUMNS.date]: "date",
   [COLUMNS.competition]: "select",
@@ -69,8 +82,7 @@ export const COLUMN_TYPES: Record<string, "rich_text" | "date" | "select" | "che
   [COLUMNS.description]: "rich_text",
   [COLUMNS.espnId]: "rich_text",
   [COLUMNS.youtube]: "url",
-  [COLUMNS.start]: "number",
-  [COLUMNS.end]: "number",
+  [COLUMNS.clip]: "rich_text",
 };
 
 // "45'+2'" → 47.
@@ -101,17 +113,9 @@ export const isRawGoal = (v: unknown): v is RawGoal => {
 
 // ---- JSON → Notion ----
 
-type Properties = NonNullable<CreatePageParameters["properties"]>;
-
-// Notion caps one rich text item at 2000 characters.
-const text = (s: string | null | undefined) => ({
-  rich_text: s ? [{ type: "text" as const, text: { content: s.slice(0, 2000) } }] : [],
-});
-const select = (s: string | null | undefined) => ({ select: s ? { name: s.replace(/,/g, " ") } : null });
-
 export function toProperties(g: RawGoal, titleColumn: string): Properties {
   const props: Properties = {
-    [titleColumn]: { title: [{ type: "text", text: { content: `${g.team} vs ${g.opponent} · ${g.minute}` } }] },
+    [titleColumn]: title(`${g.team} vs ${g.opponent} · ${g.minute}`),
     [COLUMNS.key]: text(goalKey(g)),
     [COLUMNS.date]: { date: { start: g.date } },
     [COLUMNS.competition]: select(g.competition),
@@ -132,23 +136,11 @@ export function toProperties(g: RawGoal, titleColumn: string): Properties {
   // Clip columns are only written when the JSON has them, so clips added
   // by hand in Notion survive a re-sync.
   if (g.youtube !== undefined) props[COLUMNS.youtube] = { url: g.youtube || null };
-  if (g.start !== undefined) props[COLUMNS.start] = { number: g.start };
-  if (g.end !== undefined) props[COLUMNS.end] = { number: g.end };
+  if (g.start !== undefined || g.end !== undefined) props[COLUMNS.clip] = text(formatClipRange(g.start, g.end));
   return props;
 }
 
 // ---- Notion → app ----
-
-type Prop = PageObjectResponse["properties"][string];
-
-const readText = (p: Prop | undefined) =>
-  p?.type === "rich_text"
-    ? p.rich_text.map((t) => t.plain_text).join("")
-    : p?.type === "title"
-      ? p.title.map((t) => t.plain_text).join("")
-      : "";
-const readSelect = (p: Prop | undefined) => (p?.type === "select" ? (p.select?.name ?? "") : "");
-const orNull = (s: string) => s || null;
 
 // A row back into the JSON shape, or null when it lacks what the app needs
 // (an empty row, or one added by hand without a date).
@@ -156,15 +148,12 @@ export function fromPage(page: PageObjectResponse): RawGoal | null {
   const p = page.properties;
   const when = p[COLUMNS.date];
   const date = when?.type === "date" ? when.date?.start.slice(0, 10) : undefined;
-  const friendly = p[COLUMNS.friendly];
-  const youtube = p[COLUMNS.youtube];
-  const start = p[COLUMNS.start];
-  const end = p[COLUMNS.end];
+  const clip = parseClipRange(readText(p[COLUMNS.clip]));
   const goal: RawGoal = {
     date: date ?? "",
     competition: readSelect(p[COLUMNS.competition]),
     stage: orNull(readText(p[COLUMNS.stage])),
-    is_friendly: friendly?.type === "checkbox" ? friendly.checkbox : false,
+    is_friendly: readCheckbox(p[COLUMNS.friendly]),
     team: readSelect(p[COLUMNS.team]),
     venue: readText(p[COLUMNS.venue]),
     home_away: readSelect(p[COLUMNS.homeAway]) || "home",
@@ -177,9 +166,9 @@ export function fromPage(page: PageObjectResponse): RawGoal | null {
     goal_scorer: readText(p[COLUMNS.scorer]) || "Lamine Yamal",
     description: readText(p[COLUMNS.description]),
     espn_event_id: readText(p[COLUMNS.espnId]) || page.id,
-    youtube: youtube?.type === "url" ? youtube.url : null,
-    start: start?.type === "number" ? (start.number ?? undefined) : undefined,
-    end: end?.type === "number" ? (end.number ?? undefined) : undefined,
+    youtube: readUrl(p[COLUMNS.youtube]),
+    start: clip?.start,
+    end: clip?.end,
   };
   return goal.date && goal.minute && goal.opponent && goal.team ? goal : null;
 }

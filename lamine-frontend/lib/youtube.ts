@@ -1,5 +1,8 @@
 // A small typed wrapper around the YouTube IFrame Player API.
 // The API script loads once, the first time a player is needed.
+// No "@/" imports: scripts/notion-sync.mts loads parseYouTube through lib/notion.
+
+import { parseTimecode } from "./timecode.ts";
 
 export const STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } as const;
 
@@ -12,6 +15,8 @@ export type YTPlayer = {
   mute(): void;
   unMute(): void;
   isMuted(): boolean;
+  setVolume(volume: number): void;
+  getVolume(): number;
   getCurrentTime(): number;
   getDuration(): number;
   getPlayerState(): number;
@@ -108,7 +113,23 @@ export function clipProgress(p: YTPlayer, start = 0, end?: number) {
   return Math.min(1, Math.max(0, (p.getCurrentTime() - start) / (dur - start)));
 }
 
-export const fmtTime = (s: number) => {
-  const t = Math.max(0, Math.floor(s));
-  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
-};
+// Accepts a bare id or any youtube.com / youtu.be link (watch, shorts, embed, live).
+export function parseYouTube(value: string) {
+  const v = value.trim();
+  if (/^[\w-]{11}$/.test(v)) return { id: v, vertical: false };
+  try {
+    const url = new URL(v.startsWith("http") ? v : `https://${v}`);
+    const parts = url.pathname.split("/").filter(Boolean);
+    const id = url.hostname.endsWith("youtu.be")
+      ? parts[0]
+      : (url.searchParams.get("v") ?? (["shorts", "embed", "live"].includes(parts[0]) ? parts[1] : null));
+    if (!id || !/^[\w-]{11}$/.test(id)) return null;
+    return {
+      id,
+      vertical: parts[0] === "shorts",
+      start: parseTimecode(url.searchParams.get("t") ?? url.searchParams.get("start") ?? ""),
+    };
+  } catch {
+    return null;
+  }
+}

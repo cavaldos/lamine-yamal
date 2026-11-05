@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight } from "@/components/ui/icons";
+import HighlightCount from "@/components/ui/highlight-count";
 import LoopVideo from "@/components/ui/loop-video";
 import Section from "@/components/ui/section";
-import { HIGHLIGHT_LOOP, HIGHLIGHTS } from "@/lib/content";
-import { format, localePath } from "@/lib/i18n/config";
+import { HIGHLIGHT_LOOP } from "@/lib/content";
+import { localePath } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/get-dictionary";
 
 // One clip loops, muted, across the whole section; the button goes to /highlights,
@@ -11,6 +12,8 @@ import { getDictionary, getLocale } from "@/lib/i18n/get-dictionary";
 export default async function HighlightsSection() {
   const { highlights } = await getDictionary();
   const locale = await getLocale();
+  // The count follows the live list, so it is a client component inside the label.
+  const [before, after = ""] = highlights.watchAll.split("{count}");
   return (
     <Section id="highlights">
       {/* w-full matters: without it, min-height stretches the 16:9 box wider than a phone screen. */}
@@ -30,7 +33,12 @@ export default async function HighlightsSection() {
             href={localePath(locale, "/highlights")}
             className="inline-flex min-h-12 w-fit max-w-full shrink-0 items-center justify-center gap-2 bg-white px-6 py-3 text-center font-mono text-[11px] font-bold tracking-[0.12em] text-black uppercase transition-opacity duration-150 hover:opacity-80"
           >
-            {format(highlights.watchAll, { count: HIGHLIGHTS.length })} <ArrowUpRight className="h-3.5 w-3.5" />
+            <span>
+              {before}
+              <HighlightCount animate={false} />
+              {after}
+            </span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>

@@ -21,6 +21,8 @@
 @property --invert-fg { syntax: "<color>"; inherits: true; initial-value: #06070c }
 @property --danger { syntax: "<color>"; inherits: true; initial-value: #ff6259 }
 @property --scanline { syntax: "<color>"; inherits: true; initial-value: #ffffff06 }
+@property --chart-focus { syntax: "<color>"; inherits: true; initial-value: #f4c430 }
+@property --chart-rest { syntax: "<color>"; inherits: true; initial-value: #595a60 }
 
 /* Dark is the default: blaugrana on near-black navy. */
 :root,
@@ -43,6 +45,9 @@
   --invert-fg: #06070c;
   --danger: #ff6259;
   --scanline: #ffffff06;
+  /* Charts: the bar the story is about (focus) and the bars around it (rest). */
+  --chart-focus: #f4c430;
+  --chart-rest: #595a60;
   color-scheme: dark;
 }
 
@@ -65,6 +70,8 @@
   --invert-fg: #f1efe9;
   --danger: #b3261e;
   --scanline: #0d0f1a08;
+  --chart-focus: #a77a06;
+  --chart-rest: #d3d1cb;
   color-scheme: light;
 }
 
@@ -87,6 +94,8 @@
   --color-invert-fg: var(--invert-fg);
   --color-danger: var(--danger);
   --color-scanline: var(--scanline);
+  --color-chart-focus: var(--chart-focus);
+  --color-chart-rest: var(--chart-rest);
   --font-display: var(--font-archivo), system-ui, sans-serif;
   --font-body: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -158,9 +167,12 @@ body {
   color: #fff;
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent-ink);
-  outline-offset: 2px;
+/* In the base layer so utilities like outline-none can override it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 2px;
+  }
 }
 
 /* Theme switch: animate the registered colors, freeze every descendant transition. */
@@ -343,6 +355,20 @@ html.theme-anim body * {
     animation-timeline: view();
     animation-range: entry 0% entry 45%;
   }
+
+  /* Chart bars grow out from their baseline as they scroll in. */
+  [data-grow] {
+    transform-origin: left center;
+    animation: bar-grow linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 35%;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
 }
 
 /* Ruler rail. */
@@ -389,7 +415,8 @@ html.theme-anim body * {
   /* Scroll timelines ignore animation-duration, so opt these out explicitly. */
   [data-reveal],
   [data-draw-rule],
-  [data-draw-tick] {
+  [data-draw-tick],
+  [data-grow] {
     animation: none !important;
   }
 }
@@ -672,4 +699,26 @@ html.theme-anim body * {
 
 .feed-h {
   width: min(100vw - var(--feed-rail) * 2, (100dvh - var(--feed-pad) - 9rem) * 16 / 9, 1040px);
+}
+
+/* Music button: four bars bouncing while the background music plays. */
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq-bounce 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes eq-bounce {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eq-bar {
+    animation: none;
+    transform: scaleY(0.6);
+  }
 }

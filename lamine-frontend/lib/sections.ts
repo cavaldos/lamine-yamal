@@ -6,7 +6,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 // The words (`label` in the section header, `nav` in the nav bar, menu, footer and
 // ruler, `hint` on the right of the header) are in dict.sections, per language.
 
-export type SectionId = "hero" | "trophies" | "goals" | "highlights" | "archive" | "journey";
+export type SectionId = "hero" | "trophies" | "ballonDor" | "goals" | "highlights" | "archive" | "journey";
 
 export type SectionMeta = {
   id: SectionId;
@@ -19,10 +19,11 @@ export type SectionMeta = {
 const NUMS: [SectionId, string][] = [
   ["hero", "00"],
   ["trophies", "01"],
-  ["goals", "02"],
-  ["highlights", "03"],
-  ["archive", "04"],
-  ["journey", "05"],
+  ["ballonDor", "02"],
+  ["goals", "03"],
+  ["highlights", "04"],
+  ["archive", "05"],
+  ["journey", "06"],
 ];
 
 export const sectionsFor = (dict: Dictionary): SectionMeta[] =>

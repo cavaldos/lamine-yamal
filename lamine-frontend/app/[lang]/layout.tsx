@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Archivo, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
-import GoalsSync from "@/components/layout/goals-sync";
+import NotionSync from "@/components/layout/notion-sync";
 import SiteFooter from "@/components/layout/site-footer";
 import SmoothScroll from "@/components/layout/smooth-scroll";
 import SiteNav from "@/components/layout/site-nav";
@@ -52,7 +52,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
           <JsonLd />
           <SiteNav />
           <SmoothScroll />
-          <GoalsSync />
+          <NotionSync />
           {children}
           <SiteFooter />
           <VideoLightbox />

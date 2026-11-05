@@ -42,9 +42,24 @@ export const vi: Dictionary = {
     goalVideos: "Video bàn thắng",
   },
 
+  music: {
+    settings: "Cài đặt âm nhạc",
+    title: "Nhạc nền",
+    play: "Phát nhạc",
+    pause: "Tạm dừng nhạc",
+    prev: "Bài trước",
+    next: "Bài tiếp theo",
+    volume: "Âm lượng",
+    waiting: "Nhạc sẽ phát sau lần nhấp hoặc chạm đầu tiên.",
+    ducked: "Đang tạm dừng vì có video khác phát tiếng.",
+    youtube: "YouTube",
+    blocked: "Bị chặn",
+  },
+
   sections: {
     hero: { label: "Lamine", nav: "Lamine", hint: "" },
     trophies: { label: "Danh hiệu", nav: "Danh hiệu", hint: "CLB · Đội tuyển · Cá nhân" },
+    ballonDor: { label: "Quả bóng vàng", nav: "Bóng vàng", hint: "Thứ hạng qua từng năm" },
     goals: { label: "Bàn thắng", nav: "Bàn thắng", hint: "Bản đồ cú sút · La Liga" },
     highlights: { label: "Highlight", nav: "Highlight", hint: "Xem tất cả ở trang riêng" },
     archive: { label: "Tư liệu", nav: "Tư liệu", hint: "Album ảnh thời thơ ấu" },
@@ -77,7 +92,7 @@ export const vi: Dictionary = {
     "Nº 10",
     "EURO 2024",
     "Golden Boy",
-    "Kopa Trophy ×2",
+    "Kopa Trophy ×3",
     "World Cup 2026",
     "La Liga ×3",
     "Copa del Rey",
@@ -95,11 +110,26 @@ export const vi: Dictionary = {
     },
     awards: {
       goldenBoy: "Golden Boy",
-      kopa: "Kopa Trophy ×2",
+      kopa: "Kopa Trophy ×3",
       euroYoung: "Cầu thủ trẻ xuất sắc nhất EURO",
       laureus: "Laureus Breakthrough",
+      laureusYoung: "Laureus Young Sportsperson",
       laligaPlayer: "Cầu thủ xuất sắc nhất La Liga",
     },
+  },
+
+  ballonDor: {
+    nominations: "Lần được đề cử",
+    bestFinish: "Thứ hạng cao nhất",
+    podiums: "Lần vào top 3",
+    edition: "Quả bóng vàng {year}",
+    place: "Hạng",
+    points: "{n} điểm",
+    behind: "Kém {name} {n} điểm",
+    winner: "Đoạt giải",
+    kopa: "Cùng đêm nhận Kopa Trophy",
+    rankingAria: "Nhóm dẫn đầu bảng xếp hạng {year}",
+    footnote: "Điểm số theo công bố của France Football sau mỗi lễ trao giải · lần đầu lọt danh sách đề cử năm 2024",
   },
 
   goals: {
@@ -236,15 +266,6 @@ export const vi: Dictionary = {
     end: "Hết danh sách",
     endCount: "{count} video.",
     clipFailed: "Video này không phát được, chuyển sang video tiếp theo…",
-    titles: {
-      M37orXBtvtg: "Tất cả bàn thắng của Lamine Yamal năm 2025",
-      cQQsgMpy2cA: "Best of Lamine Yamal mùa 2025/26",
-      "30mr4mGaI5A": "Cậu bé 16 tuổi khiến tuyển Pháp gục ngã",
-      "8Wa2p3Tz7Ts": "Từ La Masia tới chung kết World Cup: Messi & Lamine",
-      CxumhgRBmP8: "Ngày Yamal 15 tuổi vào sân và thay đổi trận đấu",
-      "FY8ASN1VV-8": "Top 10 bàn thắng",
-      FJjRJbRPExM: "100+ pha xử lý kỹ thuật",
-    },
   },
 
   lightbox: {

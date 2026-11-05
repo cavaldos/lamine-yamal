@@ -4,6 +4,7 @@ import { DEMO_VIDEOS, DEMO_POOL } from "@/lib/demo-videos";
 import { format } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { minuteValue, type RawGoal } from "@/lib/notion/goal-schema";
+import { parseYouTube } from "@/lib/youtube";
 
 // Goal data. The goals come from the Notion database (via /api/goals, cached in
 // localStorage by lib/goals-store.ts); data/lamine_yamal_goals_assists.json is the
@@ -16,8 +17,10 @@ import { minuteValue, type RawGoal } from "@/lib/notion/goal-schema";
 // goal in data/lamine_yamal_goals_assists.json). Any YouTube link or id works.
 //   "youtube": "https://www.youtube.com/shorts/bqgKhGNMXNo"   → plays vertical (9:16)
 //   "youtube": "https://www.youtube.com/watch?v=AfpItQBKl04&t=95" → 16:9, starts at 1:35
-// Optional "start" / "end" (seconds) trim a long video down to the goal, so the
-// back-to-back mode moves on as soon as the goal is over (Notion: Clip Start / Clip End).
+// To play only part of a long video, fill its Clip Time column in Notion with the
+// start and end, e.g. "06:43, 7:34" or "1:02:30, 1:03:10" (one time alone plays to
+// the end). The site plays just that stretch, so the back-to-back mode moves on as
+// soon as the goal is over. In the JSON the same thing is "start" / "end" in seconds.
 
 export type Shot = { x: number; y: number; xg: number; distance: number; legacyN: number };
 
@@ -123,35 +126,6 @@ export type GoalVideo = {
   end?: number;
   demo: boolean; // a stand-in from lib/demo-videos.ts, not the goal's own clip
 };
-
-// "75", "1m15s", "1h2m3s" → seconds.
-const seconds = (t: string | null) => {
-  if (!t) return undefined;
-  if (/^\d+$/.test(t)) return Number(t);
-  const m = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
-  return m ? Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0) : undefined;
-};
-
-// Accepts a bare id or any youtube.com / youtu.be link (watch, shorts, embed, live).
-export function parseYouTube(value: string) {
-  const v = value.trim();
-  if (/^[\w-]{11}$/.test(v)) return { id: v, vertical: false };
-  try {
-    const url = new URL(v.startsWith("http") ? v : `https://${v}`);
-    const parts = url.pathname.split("/").filter(Boolean);
-    const id = url.hostname.endsWith("youtu.be")
-      ? parts[0]
-      : (url.searchParams.get("v") ?? (["shorts", "embed", "live"].includes(parts[0]) ? parts[1] : null));
-    if (!id || !/^[\w-]{11}$/.test(id)) return null;
-    return {
-      id,
-      vertical: parts[0] === "shorts",
-      start: seconds(url.searchParams.get("t") ?? url.searchParams.get("start")),
-    };
-  } catch {
-    return null;
-  }
-}
 
 // The clip to play for a goal: its own link when set, otherwise a demo.
 export function goalVideo(g: Goal): GoalVideo {

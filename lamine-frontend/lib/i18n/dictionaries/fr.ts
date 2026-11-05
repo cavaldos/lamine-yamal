@@ -45,9 +45,24 @@ export const fr: Dictionary = {
     goalVideos: "Vidéos des buts",
   },
 
+  music: {
+    settings: "Réglages de la musique",
+    title: "Musique de fond",
+    play: "Lancer la musique",
+    pause: "Mettre la musique en pause",
+    prev: "Morceau précédent",
+    next: "Morceau suivant",
+    volume: "Volume",
+    waiting: "La musique démarre à votre premier clic ou toucher.",
+    ducked: "En pause pendant qu'une autre vidéo joue avec le son.",
+    youtube: "YouTube",
+    blocked: "Bloqué",
+  },
+
   sections: {
     hero: { label: "Lamine", nav: "Lamine", hint: "" },
     trophies: { label: "Trophées", nav: "Trophées", hint: "Club · Sélection · Individuel" },
+    ballonDor: { label: "Ballon d'Or", nav: "Ballon d'Or", hint: "Classement année par année" },
     goals: { label: "Buts", nav: "Buts", hint: "Carte des tirs · La Liga" },
     highlights: { label: "Résumés", nav: "Résumés", hint: "Tous à voir sur leur page" },
     archive: { label: "Archives", nav: "Archives", hint: "Album photo d'enfance" },
@@ -80,7 +95,7 @@ export const fr: Dictionary = {
     "Nº 10",
     "EURO 2024",
     "Golden Boy",
-    "Trophée Kopa ×2",
+    "Trophée Kopa ×3",
     "Coupe du monde 2026",
     "La Liga ×3",
     "Coupe du Roi",
@@ -98,11 +113,26 @@ export const fr: Dictionary = {
     },
     awards: {
       goldenBoy: "Golden Boy",
-      kopa: "Trophée Kopa ×2",
+      kopa: "Trophée Kopa ×3",
       euroYoung: "Meilleur jeune de l'EURO",
       laureus: "Laureus Révélation",
+      laureusYoung: "Laureus Jeune Sportif",
       laligaPlayer: "Joueur de la saison en La Liga",
     },
+  },
+
+  ballonDor: {
+    nominations: "Nominations",
+    bestFinish: "Meilleur classement",
+    podiums: "Podiums",
+    edition: "Ballon d'Or {year}",
+    place: "Rang",
+    points: "{n} pts",
+    behind: "À {n} pts de {name}",
+    winner: "Vainqueur",
+    kopa: "Trophée Kopa le même soir",
+    rankingAria: "Haut du classement {year}",
+    footnote: "Points publiés par France Football après chaque cérémonie · première nomination en 2024",
   },
 
   goals: {
@@ -240,15 +270,6 @@ export const fr: Dictionary = {
     end: "Fin de la liste",
     endCount: "{count} vidéos.",
     clipFailed: "Cette vidéo ne peut pas être lue, passage à la suivante…",
-    titles: {
-      M37orXBtvtg: "Tous les buts de Lamine Yamal en 2025",
-      cQQsgMpy2cA: "Best of Lamine Yamal, saison 2025/26",
-      "30mr4mGaI5A": "Le gamin de 16 ans qui a fait chuter la France",
-      "8Wa2p3Tz7Ts": "De La Masia à la finale du Mondial : Messi & Lamine",
-      CxumhgRBmP8: "Le jour où Yamal, 15 ans, est entré en jeu et a changé le match",
-      "FY8ASN1VV-8": "Top 10 des buts",
-      FJjRJbRPExM: "Plus de 100 gestes techniques",
-    },
   },
 
   lightbox: {

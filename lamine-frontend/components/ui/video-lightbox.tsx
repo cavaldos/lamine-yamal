@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { lockScroll } from "@/components/layout/smooth-scroll";
 import { X } from "@/components/ui/icons";
 import { useDict } from "@/lib/i18n/provider";
+import { useAudioFocus } from "@/lib/music";
 
 // `vertical` for Shorts (9:16); `start` / `end` trim the clip, in seconds.
 export type LightboxVideo = {
@@ -24,6 +25,7 @@ export default function VideoLightbox() {
   const { lightbox } = useDict();
   const dialog = useRef<HTMLDialogElement>(null);
   const [video, setVideo] = useState<LightboxVideo | null>(null);
+  useAudioFocus(video !== null); // background music pauses while the lightbox plays
 
   useEffect(() => {
     show = (v) => {

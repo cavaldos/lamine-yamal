@@ -1,0 +1,109 @@
+{
+  "player": "Lamine Yamal",
+  "generated": "2026-11-05",
+  "notes": [
+    "One entry per highlight video on /highlights. `npm run notion:sync -- highlights` copies this list into the Notion highlights database; the site reads Notion and falls back to this file.",
+    "`youtube` takes any YouTube link or a bare id. `title` is English; `titles` holds the other languages. `order` is the position in the default (featured) sort.",
+    "`start` / `end` (seconds) play only part of the video; Notion shows them in the Clip Time column."
+  ],
+  "highlights": [
+    {
+      "youtube": "MZ5z-dLhjUE",
+      "title": "From La Masia to First Team — Best of Lamine Yamal",
+      "source": "FC Barcelona",
+      "length": "5:27",
+      "order": 1
+    },
+    {
+      "youtube": "M37orXBtvtg",
+      "title": "All of Lamine Yamal's goals in 2025",
+      "titles": {
+        "vi": "Tất cả bàn thắng của Lamine Yamal năm 2025",
+        "fr": "Tous les buts de Lamine Yamal en 2025",
+        "es": "Todos los goles de Lamine Yamal en 2025"
+      },
+      "source": "FC Barcelona",
+      "length": "18:56",
+      "order": 2
+    },
+    {
+      "youtube": "cQQsgMpy2cA",
+      "title": "Best of Lamine Yamal 2025/26 season",
+      "titles": {
+        "vi": "Best of Lamine Yamal mùa 2025/26",
+        "fr": "Best of Lamine Yamal, saison 2025/26",
+        "es": "Lo mejor de Lamine Yamal, temporada 2025/26"
+      },
+      "source": "FC Barcelona",
+      "length": "14:00",
+      "order": 3
+    },
+    {
+      "youtube": "GeONdafonl4",
+      "title": "Lamine Yamal — The Movie",
+      "source": "LALIGA",
+      "length": "10:20",
+      "order": 4
+    },
+    {
+      "youtube": "30mr4mGaI5A",
+      "title": "The 16-year-old who brought France down",
+      "titles": {
+        "vi": "Cậu bé 16 tuổi khiến tuyển Pháp gục ngã",
+        "fr": "Le gamin de 16 ans qui a fait chuter la France",
+        "es": "El chico de 16 años que hizo caer a Francia"
+      },
+      "source": "Number 9",
+      "length": "16:25",
+      "order": 5
+    },
+    {
+      "youtube": "8Wa2p3Tz7Ts",
+      "title": "From La Masia to the World Cup final: Messi & Lamine",
+      "titles": {
+        "vi": "Từ La Masia tới chung kết World Cup: Messi & Lamine",
+        "fr": "De La Masia à la finale du Mondial : Messi & Lamine",
+        "es": "De La Masia a la final del Mundial: Messi y Lamine"
+      },
+      "source": "FC Barcelona",
+      "length": "9:50",
+      "order": 6
+    },
+    {
+      "youtube": "CxumhgRBmP8",
+      "title": "The day 15-year-old Yamal came on and changed the game",
+      "titles": {
+        "vi": "Ngày Yamal 15 tuổi vào sân và thay đổi trận đấu",
+        "fr": "Le jour où Yamal, 15 ans, est entré en jeu et a changé le match",
+        "es": "El día que Yamal, con 15 años, salió al campo y cambió el partido"
+      },
+      "source": "ArtSoccer",
+      "length": "10:52",
+      "order": 7
+    },
+    {
+      "youtube": "FY8ASN1VV-8",
+      "title": "Top 10 goals",
+      "titles": {
+        "vi": "Top 10 bàn thắng",
+        "fr": "Top 10 des buts",
+        "es": "Top 10 de goles"
+      },
+      "source": "NecbY Football",
+      "length": "4:39",
+      "order": 8
+    },
+    {
+      "youtube": "FJjRJbRPExM",
+      "title": "100+ skill moves",
+      "titles": {
+        "vi": "100+ pha xử lý kỹ thuật",
+        "fr": "Plus de 100 gestes techniques",
+        "es": "Más de 100 jugadas de técnica"
+      },
+      "source": "DX10HD3",
+      "length": "10:00",
+      "order": 9
+    }
+  ]
+}

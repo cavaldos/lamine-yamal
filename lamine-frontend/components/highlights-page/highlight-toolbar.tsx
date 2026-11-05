@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Play, Search, X } from "@/components/ui/icons";
 import Select from "@/components/ui/select";
-import { EMPTY_QUERY, sortLabels, sourceLabels, type HighlightQuery } from "@/lib/highlights";
+import {
+  ALL_SOURCES,
+  EMPTY_QUERY,
+  sortLabels,
+  sourceLabels,
+  sourcesOf,
+  type Highlight,
+  type HighlightQuery,
+} from "@/lib/highlights";
 import { format } from "@/lib/i18n/config";
 import { useDict } from "@/lib/i18n/provider";
 
@@ -14,19 +22,22 @@ export default function HighlightToolbar({
   onQuery,
   count,
   total,
+  all,
   onPlayAll,
 }: {
   query: HighlightQuery;
   onQuery: (q: HighlightQuery) => void;
   count: number;
   total: number;
+  all: Highlight[]; // every video, unfiltered: the source filter offers all their channels
   onPlayAll: () => void;
 }) {
   const dict = useDict();
   const t = dict.highlightsPage;
+  const sources = useMemo(() => sourcesOf(all), [all]);
   const input = useRef<HTMLInputElement>(null);
   const set = (patch: Partial<HighlightQuery>) => onQuery({ ...query, ...patch });
-  const filtered = query.source !== 0 || query.q.trim() !== "";
+  const filtered = query.source !== ALL_SOURCES || query.q.trim() !== "";
 
   // "/" jumps to the search box, as on most sites with search.
   useEffect(() => {
@@ -72,9 +83,9 @@ export default function HighlightToolbar({
 
           <Select
             label={t.source}
-            items={sourceLabels(dict)}
-            value={query.source}
-            onChange={(source) => set({ source })}
+            items={sourceLabels(dict, sources)}
+            value={Math.max(0, sources.indexOf(query.source))}
+            onChange={(i) => set({ source: sources[i] })}
             className="h-11 flex-1 sm:w-48 sm:flex-none"
           />
           <Select

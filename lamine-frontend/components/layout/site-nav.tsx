@@ -1,5 +1,8 @@
 import Link from "next/link";
 import LanguageSwitcher from "@/components/layout/language-switcher";
+// Background music: turned off for now. To bring it back, uncomment this import and
+// <MusicPlayer /> below, and make the CTA an icon under 360px so the bar fits a 320px phone.
+// import MusicPlayer from "@/components/layout/music-player";
 import SectionLink from "@/components/layout/section-link";
 import ThemeToggle from "@/components/layout/theme-toggle";
 import { Menu } from "@/components/ui/icons";
@@ -34,8 +37,10 @@ export default async function SiteNav() {
             className="flex shrink-0 items-center gap-3 border-r border-line px-3 text-ink-strong hover:opacity-70 sm:px-5"
           >
             <Logo className="h-[18px] w-auto" />
-            <span className="hud-label hidden text-ink sm:inline">{WORDMARK}</span>
+            {/* Logo only from 1024 to 1279px, so the six section links fit in every language. */}
+            <span className="hud-label hidden text-ink sm:inline lg:hidden xl:inline">{WORDMARK}</span>
           </SectionLink>
+          {/* <MusicPlayer /> */}
 
           <ul className="hidden min-w-0 items-stretch lg:flex">
             {sections.map(({ id, nav }) => (
@@ -51,7 +56,7 @@ export default async function SiteNav() {
         </div>
 
         <div className="flex shrink-0 items-stretch">
-          <p className="hud-label hidden items-center px-4 text-faint xl:flex">
+          <p className="hud-label hidden items-center px-4 text-faint 2xl:flex">
             FC Barcelona <span className="mx-2 text-garnet-ink">·</span> Nº 10
           </p>
           <Link href={localePath(locale, "/goals")} className={cta}>

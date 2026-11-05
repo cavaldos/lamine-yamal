@@ -4,18 +4,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { lockScroll } from "@/components/layout/smooth-scroll";
 import { useGoalPlayer } from "@/components/goals-page/use-goal-player";
 import { Expand, Pause, Play, Replay, SkipNext, SkipPrev, Volume, VolumeOff, X } from "@/components/ui/icons";
-import { videoTitle, type Video } from "@/lib/content";
+import { highlightClip, highlightTitle, type Highlight } from "@/lib/highlights";
 import { format } from "@/lib/i18n/config";
-import { useDict } from "@/lib/i18n/provider";
-import { fmtTime } from "@/lib/youtube";
+import { useDict, useLocale } from "@/lib/i18n/provider";
+import { formatTimecode } from "@/lib/timecode";
 
 // Controls fade out after this long without the pointer moving.
 const IDLE_MS = 2600;
 
 const ctl =
   "flex h-10 w-10 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/15 hover:text-white";
-
-const asClip = (v: Video) => ({ id: v.youtube, vertical: false, demo: false });
 
 // The player: one video fills the stage, the list sits beside it (below on a
 // phone). When a video ends the next one starts; clicking a row jumps to it.
@@ -24,11 +22,12 @@ export default function HighlightTheater({
   start,
   onClose,
 }: {
-  videos: Video[];
+  videos: Highlight[];
   start: number;
   onClose: () => void;
 }) {
   const dict = useDict();
+  const locale = useLocale();
   const t = dict.highlightsPage;
   const dialog = useRef<HTMLDialogElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
@@ -50,7 +49,7 @@ export default function HighlightTheater({
     },
     onFrame: (p, t, dur) => {
       if (fill.current) fill.current.style.transform = `scaleX(${p.toFixed(4)})`;
-      if (clock.current) clock.current.textContent = dur > 0 ? `${fmtTime(t)} / ${fmtTime(dur)}` : "";
+      if (clock.current) clock.current.textContent = dur > 0 ? `${formatTimecode(t)} / ${formatTimecode(dur)}` : "";
     },
   });
 
@@ -61,7 +60,7 @@ export default function HighlightTheater({
       setDone(false);
       setNotice(null);
       if (fill.current) fill.current.style.transform = "scaleX(0)";
-      load(asClip(videos[i]));
+      load(highlightClip(videos[i]));
     },
     [load, videos],
   );
@@ -196,7 +195,7 @@ export default function HighlightTheater({
                 <p className="hud-label text-white/65">{video.source}</p>
                 {/* Small on a phone, where the picture is only ~200px tall and the title sits on it. */}
                 <p className="mt-1 line-clamp-2 font-display text-base font-medium tracking-[-0.03em] sm:mt-1.5 sm:text-xl md:text-3xl">
-                  {videoTitle(video, dict)}
+                  {highlightTitle(video, locale)}
                 </p>
               </div>
             )}
@@ -300,7 +299,7 @@ export default function HighlightTheater({
           </p>
           <ol className="thin-scroll min-h-0 flex-1 overflow-y-auto">
             {videos.map((v, i) => (
-              <li key={v.youtube}>
+              <li key={v.id}>
                 <button
                   ref={(el) => {
                     rows.current[i] = el;
@@ -328,7 +327,7 @@ export default function HighlightTheater({
                     )}
                   </span>
                   <span className="min-w-0">
-                    <span className="line-clamp-2 text-[13px] leading-snug font-medium text-white">{videoTitle(v, dict)}</span>
+                    <span className="line-clamp-2 text-[13px] leading-snug font-medium text-white">{highlightTitle(v, locale)}</span>
                     <span className="hud-label mt-1 block truncate text-[10px] text-white/50">{v.source}</span>
                   </span>
                 </button>

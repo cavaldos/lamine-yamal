@@ -1,6 +1,7 @@
 import Ruler from "@/components/layout/ruler";
 import JsonLd from "@/components/seo/json-ld";
 import ArchiveSection from "@/components/sections/archive";
+import BallonDorSection from "@/components/sections/ballon-dor";
 import Closing from "@/components/sections/closing";
 import GoalsSection from "@/components/sections/goals";
 import HeroSection from "@/components/sections/hero";
@@ -22,6 +23,7 @@ export default function Home() {
         <HeroSection />
         <Marquee />
         <TrophiesSection />
+        <BallonDorSection />
         <GoalsSection />
         <HighlightsSection />
         <ArchiveSection />

@@ -172,3 +172,11 @@ export const Replay = ({ className }: P) => (
     <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4h4" />
   </svg>
 );
+
+export const MusicNote = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M9 18V5.5l11-2V16" />
+    <circle cx="6.5" cy="18" r="2.5" fill="currentColor" />
+    <circle cx="17.5" cy="16" r="2.5" fill="currentColor" />
+  </svg>
+);

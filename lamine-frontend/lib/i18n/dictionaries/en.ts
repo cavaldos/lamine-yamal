@@ -45,9 +45,24 @@ export const en = {
     goalVideos: "Goal videos",
   },
 
+  music: {
+    settings: "Music settings",
+    title: "Background music",
+    play: "Play music",
+    pause: "Pause music",
+    prev: "Previous song",
+    next: "Next song",
+    volume: "Volume",
+    waiting: "The music starts with your first click or tap.",
+    ducked: "Paused while another video plays with sound.",
+    youtube: "YouTube",
+    blocked: "Blocked",
+  },
+
   sections: {
     hero: { label: "Lamine", nav: "Lamine", hint: "" },
     trophies: { label: "Trophies", nav: "Trophies", hint: "Club · National team · Individual" },
+    ballonDor: { label: "Ballon d'Or", nav: "Ballon d'Or", hint: "Ranking by year" },
     goals: { label: "Goals", nav: "Goals", hint: "Shot map · La Liga" },
     highlights: { label: "Highlights", nav: "Highlights", hint: "See them all on their own page" },
     archive: { label: "Archive", nav: "Archive", hint: "Childhood photo album" },
@@ -80,7 +95,7 @@ export const en = {
     "Nº 10",
     "EURO 2024",
     "Golden Boy",
-    "Kopa Trophy ×2",
+    "Kopa Trophy ×3",
     "World Cup 2026",
     "La Liga ×3",
     "Copa del Rey",
@@ -98,11 +113,26 @@ export const en = {
     },
     awards: {
       goldenBoy: "Golden Boy",
-      kopa: "Kopa Trophy ×2",
+      kopa: "Kopa Trophy ×3",
       euroYoung: "EURO Young Player",
       laureus: "Laureus Breakthrough",
+      laureusYoung: "Laureus Young Sportsperson",
       laligaPlayer: "La Liga Player of the Season",
     },
+  },
+
+  ballonDor: {
+    nominations: "Nominations",
+    bestFinish: "Best finish",
+    podiums: "Podium finishes",
+    edition: "Ballon d'Or {year}",
+    place: "Place",
+    points: "{n} pts",
+    behind: "{n} pts behind {name}",
+    winner: "Winner",
+    kopa: "Kopa Trophy the same night",
+    rankingAria: "Top of the {year} ranking",
+    footnote: "Points as published by France Football after each ceremony · first shortlisted in 2024",
   },
 
   goals: {
@@ -243,9 +273,7 @@ export const en = {
     end: "End of the list",
     endCount: "{count} videos.",
     clipFailed: "This video can't be played, skipping to the next one…",
-    // Titles translated per language, by YouTube id. A video missing here keeps the title
-    // it has in lib/content.ts, which is English, so this stays empty for English.
-    titles: {} as Record<string, string>,
+    // Video titles in other languages live with the videos: data/lamine_yamal_highlights.json / Notion.
   },
 
   lightbox: {

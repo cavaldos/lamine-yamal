@@ -2,13 +2,22 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GoalVideo } from "@/lib/goals";
+import { useAudioFocus } from "@/lib/music";
 import { clipProgress, createPlayer, STATE, type YTPlayer } from "@/lib/youtube";
 
 type Options = {
   onEnded?: () => void;
   onError?: () => void;
-  // Called every animation frame with the clip's progress (0..1) and times.
+  // Called every animation frame with the clip's progress (0..1), and the time and
+  // length within the clip: for a clip cut from 6:43 to 7:34, 7:00 is (17, 51).
   onFrame?: (progress: number, time: number, duration: number) => void;
+};
+
+// Where a clip stops: its end time, or the video's own end. An end typed past the
+// video's length is held to the length, so the bar still fills and the clip moves on.
+const clipEnd = (p: YTPlayer, v: GoalVideo) => {
+  const full = p.getDuration();
+  return v.end !== undefined && full > 0 ? Math.min(v.end, full) : (v.end ?? full);
 };
 
 // One YouTube player that is reused for every clip: switching clips calls
@@ -94,16 +103,17 @@ export function useGoalPlayer(opts: Options) {
       if (!p || !v || typeof p.getCurrentTime !== "function") return;
       sync(p.getPlayerState(), p);
       const t = p.getCurrentTime();
-      const dur = v.end ?? p.getDuration();
+      const start = v.start ?? 0;
+      const end = clipEnd(p, v);
       if (!reached.current) {
         cb.current.onFrame?.(0, 0, 0);
         return;
       }
-      cb.current.onFrame?.(clipProgress(p, v.start, v.end), t, dur);
+      cb.current.onFrame?.(clipProgress(p, start, end), Math.max(0, t - start), Math.max(0, end - start));
       // Move on a beat before YouTube's own end screen (related videos) shows up.
       // (The early return above matters: right after a switch the player can
       // still report the previous clip's time and duration.)
-      if (dur > 0 && t >= dur - 0.25 && last === STATE.PLAYING) finish();
+      if (end > 0 && t >= end - 0.25 && last === STATE.PLAYING) finish();
     };
     raf = requestAnimationFrame(tick);
 
@@ -199,7 +209,7 @@ export function useGoalPlayer(opts: Options) {
     const v = video.current;
     if (!p || !v) return;
     const start = v.start ?? 0;
-    const end = v.end ?? p.getDuration();
+    const end = clipEnd(p, v);
     ended.current = false;
     p.seekTo(start + f * (end - start), true);
   }, []);
@@ -213,6 +223,8 @@ export function useGoalPlayer(opts: Options) {
   );
 
   const playing = state === STATE.PLAYING || state === STATE.BUFFERING;
+  // Background music steps aside while a clip plays with sound.
+  useAudioFocus(playing && !muted);
 
   return {
     host,

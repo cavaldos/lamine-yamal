@@ -1,5 +1,5 @@
 // The site's content: facts, videos and photos. The words around them (chapter stories,
-// trophy notes, captions, translated video titles) live in lib/i18n/dictionaries/, one
+// trophy notes, captions) live in lib/i18n/dictionaries/, one
 // file per language, and are matched to the entries here by `id` / YouTube id.
 // To swap in your own media:
 //   - photos: drop files into /public/images/... and set `photo` / `src` to "/images/...".
@@ -74,16 +74,61 @@ export const COUNTRY_TITLE_COUNT = TROPHIES.filter((t) => t.scope === "country")
 // Award names are in dict.trophies.awards.
 export const AWARDS: { id: keyof Dictionary["trophies"]["awards"]; year: string }[] = [
   { id: "goldenBoy", year: "2024" },
-  { id: "kopa", year: "2024 · 2025" },
+  { id: "kopa", year: "2024 · 2025 · 2026" },
   { id: "euroYoung", year: "2024" },
   { id: "laureus", year: "2025" },
+  { id: "laureusYoung", year: "2026" },
   { id: "laligaPlayer", year: "2025/26" },
 ];
 
-// `title` is the English one; other languages override it in dict.highlightsPage.titles.
-export type Video = { youtube: string; title: string; source: string; length?: string };
+// The men's Ballon d'Or, one entry per edition he was shortlisted for (the first was 2024),
+// oldest first. `top` is that year's podium, so it includes him when he made it.
+// Points as France Football published them after each ceremony.
+export type BallonDorEdition = {
+  year: string;
+  rank: number;
+  points: number;
+  top: { name: string; points: number }[]; // places 1, 2 and 3, in order
+  kopa?: boolean; // also took the Kopa Trophy (best under-21) that night
+};
 
-export const videoTitle = (v: Video, dict: Dictionary) => dict.highlightsPage.titles[v.youtube] ?? v.title;
+export const BALLON_DOR: BallonDorEdition[] = [
+  {
+    year: "2024",
+    rank: 8,
+    points: 383,
+    kopa: true,
+    top: [
+      { name: "Rodri", points: 1170 },
+      { name: "Vinícius Júnior", points: 1129 },
+      { name: "Jude Bellingham", points: 917 },
+    ],
+  },
+  {
+    year: "2025",
+    rank: 2,
+    points: 1059,
+    kopa: true,
+    top: [
+      { name: "Ousmane Dembélé", points: 1380 },
+      { name: "Lamine Yamal", points: 1059 },
+      { name: "Vitinha", points: 703 },
+    ],
+  },
+  {
+    year: "2026",
+    rank: 3,
+    points: 881,
+    kopa: true,
+    top: [
+      { name: "Harry Kane", points: 1055 },
+      { name: "Kylian Mbappé", points: 1027 },
+      { name: "Lamine Yamal", points: 881 },
+    ],
+  },
+];
+
+export type Video = { youtube: string; title: string; source: string; length?: string };
 
 // The clip that loops, muted, behind the home page's highlights section.
 export const HIGHLIGHT_LOOP: Video = {
@@ -92,37 +137,7 @@ export const HIGHLIGHT_LOOP: Video = {
   source: "Jens E",
 };
 
-export const HIGHLIGHTS: Video[] = [
-  {
-    youtube: "MZ5z-dLhjUE",
-    title: "From La Masia to First Team — Best of Lamine Yamal",
-    source: "FC Barcelona",
-    length: "5:27",
-  },
-  {
-    youtube: "M37orXBtvtg",
-    title: "All of Lamine Yamal's goals in 2025",
-    source: "FC Barcelona",
-    length: "18:56",
-  },
-  { youtube: "cQQsgMpy2cA", title: "Best of Lamine Yamal 2025/26 season", source: "FC Barcelona", length: "14:00" },
-  { youtube: "GeONdafonl4", title: "Lamine Yamal — The Movie", source: "LALIGA", length: "10:20" },
-  { youtube: "30mr4mGaI5A", title: "The 16-year-old who brought France down", source: "Number 9", length: "16:25" },
-  {
-    youtube: "8Wa2p3Tz7Ts",
-    title: "From La Masia to the World Cup final: Messi & Lamine",
-    source: "FC Barcelona",
-    length: "9:50",
-  },
-  {
-    youtube: "CxumhgRBmP8",
-    title: "The day 15-year-old Yamal came on and changed the game",
-    source: "ArtSoccer",
-    length: "10:52",
-  },
-  { youtube: "FY8ASN1VV-8", title: "Top 10 goals", source: "NecbY Football", length: "4:39" },
-  { youtube: "FJjRJbRPExM", title: "100+ skill moves", source: "DX10HD3", length: "10:00" },
-];
+// The videos on /highlights live in data/lamine_yamal_highlights.json and Notion: see lib/highlights.ts.
 
 export const CHILDHOOD_VIDEOS: Video[] = [
   {

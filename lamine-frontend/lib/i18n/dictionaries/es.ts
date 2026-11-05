@@ -45,9 +45,24 @@ export const es: Dictionary = {
     goalVideos: "Vídeos de goles",
   },
 
+  music: {
+    settings: "Ajustes de música",
+    title: "Música de fondo",
+    play: "Reproducir música",
+    pause: "Pausar música",
+    prev: "Canción anterior",
+    next: "Canción siguiente",
+    volume: "Volumen",
+    waiting: "La música empieza con tu primer clic o toque.",
+    ducked: "En pausa mientras otro vídeo suena.",
+    youtube: "YouTube",
+    blocked: "Bloqueado",
+  },
+
   sections: {
     hero: { label: "Lamine", nav: "Lamine", hint: "" },
     trophies: { label: "Títulos", nav: "Títulos", hint: "Club · Selección · Individuales" },
+    ballonDor: { label: "Balón de Oro", nav: "Balón de Oro", hint: "Clasificación año a año" },
     goals: { label: "Goles", nav: "Goles", hint: "Mapa de tiros · LaLiga" },
     highlights: { label: "Resúmenes", nav: "Resúmenes", hint: "Todos en su propia página" },
     archive: { label: "Archivo", nav: "Archivo", hint: "Álbum de fotos de la infancia" },
@@ -80,7 +95,7 @@ export const es: Dictionary = {
     "Nº 10",
     "EURO 2024",
     "Golden Boy",
-    "Trofeo Kopa ×2",
+    "Trofeo Kopa ×3",
     "Mundial 2026",
     "LaLiga ×3",
     "Copa del Rey",
@@ -98,11 +113,26 @@ export const es: Dictionary = {
     },
     awards: {
       goldenBoy: "Golden Boy",
-      kopa: "Trofeo Kopa ×2",
+      kopa: "Trofeo Kopa ×3",
       euroYoung: "Mejor joven de la EURO",
       laureus: "Laureus Revelación",
+      laureusYoung: "Laureus Deportista Joven",
       laligaPlayer: "Jugador de la temporada en LaLiga",
     },
+  },
+
+  ballonDor: {
+    nominations: "Nominaciones",
+    bestFinish: "Mejor puesto",
+    podiums: "Podios",
+    edition: "Balón de Oro {year}",
+    place: "Puesto",
+    points: "{n} pts",
+    behind: "A {n} pts de {name}",
+    winner: "Ganador",
+    kopa: "Trofeo Kopa esa misma noche",
+    rankingAria: "Cabeza de la clasificación de {year}",
+    footnote: "Puntos publicados por France Football tras cada gala · primera nominación en 2024",
   },
 
   goals: {
@@ -240,15 +270,6 @@ export const es: Dictionary = {
     end: "Fin de la lista",
     endCount: "{count} vídeos.",
     clipFailed: "Este vídeo no se puede reproducir, pasando al siguiente…",
-    titles: {
-      M37orXBtvtg: "Todos los goles de Lamine Yamal en 2025",
-      cQQsgMpy2cA: "Lo mejor de Lamine Yamal, temporada 2025/26",
-      "30mr4mGaI5A": "El chico de 16 años que hizo caer a Francia",
-      "8Wa2p3Tz7Ts": "De La Masia a la final del Mundial: Messi y Lamine",
-      CxumhgRBmP8: "El día que Yamal, con 15 años, salió al campo y cambió el partido",
-      "FY8ASN1VV-8": "Top 10 de goles",
-      FJjRJbRPExM: "Más de 100 jugadas de técnica",
-    },
   },
 
   lightbox: {

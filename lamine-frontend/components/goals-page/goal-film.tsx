@@ -9,7 +9,7 @@ import { Expand, Pause, Play, Replay, SkipNext, SkipPrev, Volume, VolumeOff, X }
 import { goalTitle, goalVideo, poster, thumb, type Goal } from "@/lib/goals";
 import { format } from "@/lib/i18n/config";
 import { useDict } from "@/lib/i18n/provider";
-import { fmtTime } from "@/lib/youtube";
+import { formatTimecode } from "@/lib/timecode";
 
 // Controls fade out after this long without the pointer moving.
 const IDLE_MS = 2600;
@@ -43,7 +43,7 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
     onFrame: (p, t, dur) => {
       lastTime.current = t;
       if (fill.current) fill.current.style.transform = `scaleX(${p.toFixed(4)})`;
-      if (clock.current) clock.current.textContent = dur > 0 ? `${fmtTime(t)} / ${fmtTime(dur)}` : "";
+      if (clock.current) clock.current.textContent = dur > 0 ? `${formatTimecode(t)} / ${formatTimecode(dur)}` : "";
     },
   });
 
@@ -72,7 +72,7 @@ export default function GoalFilm({ goals, start, onClose }: { goals: Goal[]; sta
 
   // A few seconds in, "previous" restarts the goal instead, like a music player.
   const prev = () => {
-    if (lastTime.current - (goalVideo(goals[indexRef.current]).start ?? 0) > 3) restart();
+    if (lastTime.current > 3) restart();
     else show(Math.max(0, indexRef.current - 1));
   };
 
